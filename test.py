@@ -16,3 +16,5 @@ node_weights = [1 for _ in range(N)]
 
 tsp = TSP(graph, node_weights)
 tsp.shortest_distance_first()
+tsp.shortest_distance_first_combination()
+tsp.perfect()
