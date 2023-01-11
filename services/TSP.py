@@ -22,7 +22,7 @@ class TSP:
         cost += self.graph[path[-1]][path[0]]
         return cost
     
-    def shortest_distance_first(self) -> List[int]:
+    def shortest_distance_first(self, start: int, verbose: bool = False) -> List[int]:
         
         time_start = time()
         def argmin_except(neighbours: List[float], path: List[int]) -> Tuple[List[int], float]:
@@ -34,18 +34,19 @@ class TSP:
                     min_value, min_index = neighbours[i], i
             return min_index
 
-        path = [0]
-        i = 0
+        path = [start]
+        i = start
         while len(path)<self.N:
             next_path = argmin_except(self.graph[i], path)
             path.append(next_path)
             i = next_path
         
         path_cost = self.get_path_cost(path)
-        print("Shortest distance first:", path_cost, f"({time()-time_start} sec)")
-        return path, path_cost, time()-time_start
+        delta = time()-time_start
+        if verbose: print("Shortest distance first:", path_cost, f"({delta} sec)")
+        return path, path_cost, delta
     
-    def shortest_distance_first_combination(self) -> List[int]:
+    def shortest_distance_first_combination(self, verbose: bool = False) -> List[int]:
         
         time_start = time()
         def argmin_except(neighbours: List[float], path: List[int]) -> Tuple[List[int], float]:
@@ -59,22 +60,33 @@ class TSP:
 
         min_path_cost, min_path = float('inf'), {}
         for i in range(self.N):
-            path = [i]
-            j = i
-            while len(path)<self.N:
-                next_path = argmin_except(self.graph[j], path)
-                path.append(next_path)
-                j = next_path
-            
-            path_cost = self.get_path_cost(path)
-            
+            path, path_cost, _ = self.shortest_distance_first(i)
             if path_cost<min_path_cost:
                 min_path_cost, min_path = path_cost, path.copy()
         
-        print("Shortest distance first combination:", min_path_cost, f"({time()-time_start} sec)")
-        return min_path, min_path_cost, time()-time_start
+        delta = time()-time_start
+        if verbose: print("Shortest distance first combination:", min_path_cost, f"({delta} sec)")
+        return min_path, min_path_cost, delta
     
-    def perfect(self) -> List[float]:
+    def two_edge_switch(self, iterations: int, verbose: bool = False) -> List[int]:
+        
+        time_start = time()
+        min_path, min_path_cost = [], float('inf')
+        path, cost, _ = self.shortest_distance_first_combination()
+        for _ in range(iterations):
+            for i in range(self.N):
+                for j in range(i, self.N):
+                    new_path = path[:i] + list(reversed(path[i:j])) + path[j:]
+                    new_path_cost = self.get_path_cost(new_path)
+                    if min_path_cost>new_path_cost:
+                        min_path = new_path.copy()
+                        min_path_cost = new_path_cost
+        
+        delta = time()-time_start
+        if verbose: print("2 edge shift optimization:", min_path_cost, f"({delta} sec)")
+        return min_path, min_path_cost, delta
+    
+    def perfect(self, verbose: bool = False) -> List[float]:
         time_start = time()
         
         matrix = self.graph
@@ -117,6 +129,7 @@ class TSP:
                     break
 
         path_cost = self.get_path_cost(path)
-        print("Shortest distance perfect:", path_cost, f"({time()-time_start} sec)")
-        return path, path_cost, time()-time_start
+        delta = time()-time_start
+        if verbose: print("Shortest distance perfect:", path_cost, f"({delta} sec)")
+        return path, path_cost, delta
     
