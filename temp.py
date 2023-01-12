@@ -13,12 +13,14 @@ def generate_metric_graph(N: int) -> List[List[float]]:
             graph[i][j] = np.linalg.norm(points[i]-points[j])
     return graph
 
-N = 100
+N = 10
 graph = generate_metric_graph(N)
 node_weights = [1 for _ in range(N)]
 tsp = TSP(graph, node_weights)
 
-# tsp.perfect(True)
+tsp.perfect(True)
 tsp.shortest_distance_first(0, True)
 tsp.shortest_distance_first_combination(True)
 tsp.two_edge_switch(2, True)
+tsp.three_edge_switch(1, True)
+tsp.approximation_1_5(True)

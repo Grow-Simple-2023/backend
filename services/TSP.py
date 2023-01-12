@@ -1,5 +1,8 @@
+import os
 import sys
+from random import randint
 import copy
+import subprocess
 from time import time
 from typing import List, Tuple, Set
 
@@ -86,6 +89,24 @@ class TSP:
         if verbose: print("2 edge shift optimization:", min_path_cost, f"({delta} sec)")
         return min_path, min_path_cost, delta
     
+    def three_edge_switch(self, iterations: int, verbose: bool = False) -> List[int]:
+        time_start = time()
+        min_path, min_path_cost = [], float('inf')
+        path, cost, _ = self.two_edge_switch(1)
+        for _ in range(iterations):
+            for i in range(self.N):
+                for j in range(i, self.N):
+                    for k in range(j, self.N):
+                        new_path = path[:i] + list(reversed(path[j:k])) + path[i:j] + path[k:]
+                        new_path_cost = self.get_path_cost(new_path)
+                        if min_path_cost>new_path_cost:
+                            min_path = new_path.copy()
+                            min_path_cost = new_path_cost
+        
+        delta = time()-time_start
+        if verbose: print("3 edge shift optimization:", min_path_cost, f"({delta} sec)")
+        return min_path, min_path_cost, delta
+    
     def perfect(self, verbose: bool = False) -> List[float]:
         time_start = time()
         
@@ -131,5 +152,124 @@ class TSP:
         path_cost = self.get_path_cost(path)
         delta = time()-time_start
         if verbose: print("Shortest distance perfect:", path_cost, f"({delta} sec)")
+        return path, path_cost, delta
+    
+    def approximation_1_5(self, verbose: bool = False) -> List[float]:
+        time_start = time()
+        
+        
+        def minimum_spanning_tree():
+            INF, N, no_edge = float('inf'), self.N, 0
+            N = self.N
+            G = self.graph
+            tree_dict = {}
+            for i in range(N): tree_dict[i] = []
+            selected_node = [0 for i in range(N)]
+            selected_node[0] = True
+            while (no_edge < N - 1):
+                minimum = INF
+                a, b = 0, 0
+                for m in range(N):
+                    if selected_node[m]:
+                        for n in range(N):
+                            if ((not selected_node[n]) and G[m][n]):  
+                                # not in selected and there is an edge
+                                if minimum > G[m][n]:
+                                    minimum = G[m][n]
+                                    a = m
+                                    b = n
+                tree_dict[a].append(b)
+                tree_dict[b].append(a)
+                selected_node[b] = True
+                no_edge += 1
+            return tree_dict
+        
+        def findpath(graph): 
+            n = len(graph) 
+            numofadj = list() 
+            for i in range(n): 
+                numofadj.append(sum(graph[i])) 
+            startpoint = 0
+            numofodd = 0
+            for i in range(n-1, -1, -1): 
+                if (numofadj[i] % 2 == 1): 
+                    numofodd += 1
+                    startpoint = i 
+            if (numofodd > 2): 
+                print("No Solution") 
+                return 
+            stack = list() 
+            path = list() 
+            cur = startpoint 
+            while(stack != [] or sum(graph[cur]) != 0): 
+                if (sum(graph[cur]) == 0): 
+                    path.append(cur + 1) 
+                    cur = stack.pop(-1) 
+                else: 
+                    for i in range(n): 
+                        if graph[cur][i] == 1: 
+                            stack.append(cur) 
+                            graph[cur][i] = 0
+                            graph[i][cur] = 0
+                            cur = i 
+                            break
+            tsp_path = []
+            for ele in path: 
+                if ele-1 not in tsp_path: tsp_path.append(ele-1)
+                # print(ele, "-> ", end = '') 
+            if cur not in tsp_path: tsp_path.append(cur)
+            # print(cur + 1)
+            return tsp_path
+        
+        mst_dict = minimum_spanning_tree()
+        odd_edged_nodes = []
+        for k, v in mst_dict.items():
+            if len(v)%2: odd_edged_nodes.append(k)
+        
+        node_translation_dict = {}
+        rev_node_translation_dict = {}
+        for index, node in enumerate(odd_edged_nodes):
+            node_translation_dict[index] = node
+            rev_node_translation_dict[node] = index
+        
+        file_name = str(randint(1, 1000000))
+        
+        with open(f"./services/temp_files/{file_name}.txt", "w+") as file:
+            odd_length = len(odd_edged_nodes)
+            file.write(f'{odd_length}\n')
+            file.write(f'{odd_length*(odd_length-1)//2}\n')
+            for i in range(odd_length):
+                for j in range(i+1, odd_length):
+                    if odd_edged_nodes[j] in mst_dict[odd_edged_nodes[i]]: continue
+                    one = rev_node_translation_dict[odd_edged_nodes[i]]
+                    two = rev_node_translation_dict[odd_edged_nodes[j]]
+                    three = self.graph[odd_edged_nodes[i]][odd_edged_nodes[j]]
+                    write_str = f'{one} {two} {three}\n'
+                    file.write(write_str)
+        
+        MCPM = subprocess.run(["./services/MCPM", "-f", f"./services/temp_files/{file_name}.txt", "--minweight"], capture_output=True)
+        os.remove(f"./services/temp_files/{file_name}.txt")
+        
+        string_edge = [x.strip() for x in MCPM.stdout.decode('utf-8').split('\n')[2:-1]]
+        # print(mst_dict)
+        # print("------------------")
+        for edges in string_edge:
+            i, j = [int(x) for x in edges.split(' ')]
+            # print(i, j)
+            mst_dict[node_translation_dict[i]].append(node_translation_dict[j])
+            mst_dict[node_translation_dict[j]].append(node_translation_dict[i])
+        # print("------------------")
+        
+        eulerian_path = [[0 for _ in range(self.N)] for _ in range(self.N)]
+        for i in mst_dict:
+            for j in mst_dict[i]:
+                eulerian_path[i][j] = 1
+                eulerian_path[j][i] = 1
+                
+        # print()
+        path = findpath(eulerian_path)
+        path_cost = self.get_path_cost(path)
+        delta = time()-time_start
+        if verbose: print("1.5 Approximation:", path_cost, f"({delta} sec)")
         return path, path_cost, delta
     

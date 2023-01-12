@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 path-tsp-1.5*
 Travaelling*
+Minimum-Cost*
 # C extensions
 *.so
 
