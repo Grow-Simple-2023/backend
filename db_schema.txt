@@ -1,0 +1,18 @@
+User: ID, 
+	phone_no, 
+	password, 
+	role
+
+Item: item_id, 
+	title, 
+	description {length, breadth, height, weight}, 
+	address, 
+	location {latitude, longitude}, 
+	EDD, 
+	control {is_fulfilled, is_delivery, is_pickup, is_assigned, is_cancelled}, 
+	OTP (same OTP for same (address, EDD))
+
+Route: route_id, 
+	rider_id, 
+	bag_description {length, breadth, height, weight}, 
+	item_ids
