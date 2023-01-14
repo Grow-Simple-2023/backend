@@ -18,9 +18,8 @@ graph = generate_metric_graph(N)
 node_weights = [1 for _ in range(N)]
 tsp = TSP(graph, node_weights)
 
-tsp.perfect(True)
-tsp.shortest_distance_first(0, True)
-tsp.shortest_distance_first_combination(True)
-tsp.two_edge_switch(2, True)
-tsp.three_edge_switch(1, True)
-tsp.approximation_1_5(True)
+tsp.perfect()
+path, cost, delta = tsp.approximation_1_5()
+path_opt, cost_opt, delta_opt = tsp.two_edge_switch(3, path)
+
+print(path_opt, cost_opt, delta_opt+delta)

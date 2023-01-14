@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 class Clustering:
     
     item_dims: List[Tuple[float]]
