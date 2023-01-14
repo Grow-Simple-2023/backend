@@ -71,11 +71,11 @@ class TSP:
         if verbose: print("Shortest distance first combination:", min_path_cost, f"({delta} sec)")
         return min_path, min_path_cost, delta
     
-    def two_edge_switch(self, iterations: int, verbose: bool = False) -> List[int]:
+    def two_edge_switch(self, iterations: int,  path: List[int], verbose: bool = False) -> List[int]:
         
         time_start = time()
         min_path, min_path_cost = [], float('inf')
-        path, cost, _ = self.shortest_distance_first_combination()
+        cost = self.get_path_cost(path)
         for _ in range(iterations):
             for i in range(self.N):
                 for j in range(i, self.N):
@@ -89,10 +89,10 @@ class TSP:
         if verbose: print("2 edge shift optimization:", min_path_cost, f"({delta} sec)")
         return min_path, min_path_cost, delta
     
-    def three_edge_switch(self, iterations: int, verbose: bool = False) -> List[int]:
+    def three_edge_switch(self, iterations: int, path: List[int], verbose: bool = False) -> List[int]:
         time_start = time()
         min_path, min_path_cost = [], float('inf')
-        path, cost, _ = self.two_edge_switch(1)
+        cost = self.get_path_cost(path)
         for _ in range(iterations):
             for i in range(self.N):
                 for j in range(i, self.N):
@@ -173,7 +173,6 @@ class TSP:
                     if selected_node[m]:
                         for n in range(N):
                             if ((not selected_node[n]) and G[m][n]):  
-                                # not in selected and there is an edge
                                 if minimum > G[m][n]:
                                     minimum = G[m][n]
                                     a = m
@@ -216,9 +215,7 @@ class TSP:
             tsp_path = []
             for ele in path: 
                 if ele-1 not in tsp_path: tsp_path.append(ele-1)
-                # print(ele, "-> ", end = '') 
             if cur not in tsp_path: tsp_path.append(cur)
-            # print(cur + 1)
             return tsp_path
         
         mst_dict = minimum_spanning_tree()
@@ -251,14 +248,10 @@ class TSP:
         os.remove(f"./services/temp_files/{file_name}.txt")
         
         string_edge = [x.strip() for x in MCPM.stdout.decode('utf-8').split('\n')[2:-1]]
-        # print(mst_dict)
-        # print("------------------")
         for edges in string_edge:
             i, j = [int(x) for x in edges.split(' ')]
-            # print(i, j)
             mst_dict[node_translation_dict[i]].append(node_translation_dict[j])
             mst_dict[node_translation_dict[j]].append(node_translation_dict[i])
-        # print("------------------")
         
         eulerian_path = [[0 for _ in range(self.N)] for _ in range(self.N)]
         for i in mst_dict:
