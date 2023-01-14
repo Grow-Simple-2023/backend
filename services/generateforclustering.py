@@ -4,20 +4,20 @@ import time
 
 # import matplotlib.pyplot as plt
 
-no_of_riders = 100
-no_of_deliveries = 10000
+no_of_riders = 5
+no_of_deliveries = 100
 
 item_lat_long = []
 item_dims = []
 riders_vol = []
 
-x = []
-y = []
+# x = []
+# y = []
 for i in range(no_of_deliveries):
-    lat = random.uniform(15,30)
-    long = random.uniform(75,100)
-    x.append(lat)
-    y.append(long)
+    lat = random.uniform(1,30)
+    long = random.uniform(50,100)
+    # x.append(lat)
+    # y.append(long)
     item_lat_long.append((lat,long))
 
 for i in range(no_of_deliveries):

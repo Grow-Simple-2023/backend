@@ -1,5 +1,19 @@
 from typing import List,Tuple
 import random as rd
+import math
+
+def distance(origin, destination)->float:
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    radius = 6371  # km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+        math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+        math.sin(dlon / 2) * math.sin(dlon / 2))
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    d = radius * c
+    return d
 class Clustering:
     
     item_dims: List[Tuple[float]]
@@ -18,8 +32,6 @@ class Clustering:
         self.item_lat_long = item_lat_long
         self.no_riders = no_riders
         self.rider_vol = rider_vol
-    
-    
     
     def distribute(self) -> List[List[int]]:
         class Centroid:
@@ -43,7 +55,7 @@ class Clustering:
         # for i in centroids:
         #     print(i.centroid)
         #     print(i.points)
-        for i in range(5):
+        for i in range(50):
             for centroid in range(len(centroids)):
                 centroids[centroid].points = []
             
@@ -52,15 +64,16 @@ class Clustering:
                 centroid_index = 0
                 for j in range(len(centroids)):
                     centroid = centroids[j].centroid
-                    distance = (self.item_lat_long[point][0]-centroid[0])**2+(self.item_lat_long[point][1]-centroid[1])**2
-                    if distance < min_distance:
+                    lat1 = self.item_lat_long[point][0]
+                    lat2 = centroid[0]
+                    lon1 = self.item_lat_long[point][1]
+                    lon2 = centroid[1]
+                    d = distance((lat1,lon1),(lat2,lon2))
+                    # d = (lat1-lat2)**2+(lon1-lon2)**2
+                    if d < min_distance:
                         centroid_index = j
-                        min_distance = distance
+                        min_distance = d
                 centroids[centroid_index].points.append((point,self.item_lat_long[point]))
-
-            # for k in centroids:
-            #     print(k.centroid)
-            #     print(k.points)
             
             for centroid in range(len(centroids)):
                 lat = 0
@@ -74,6 +87,9 @@ class Clustering:
                     long = long/size
                     centroids[centroid].centroid = (lat,long)
         
+        # for k in centroids:
+        #     print(k.centroid)
+        #     print(k.points)
 
         # class Riders_deleveries:
         #     def __init__(self,total_volume,points_with_volume) -> None:
