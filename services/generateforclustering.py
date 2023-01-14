@@ -1,10 +1,11 @@
 from Clustering import Clustering
 import random
+import time
 
 # import matplotlib.pyplot as plt
 
-no_of_riders = 5
-no_of_deliveries = 50
+no_of_riders = 100
+no_of_deliveries = 10000
 
 item_lat_long = []
 item_dims = []
@@ -46,7 +47,7 @@ cluster = Clustering(item_dims,item_lat_long,no_of_riders,riders_vol)
 # plt.scatter(x,y)
 # plt.scatter(x1,y1)
 # plt.show()
-cluster.distribute()
-
-
-
+start_time = time.time()
+temp = cluster.distribute()
+print(temp)
+print("Time taken: ",time.time()-start_time)

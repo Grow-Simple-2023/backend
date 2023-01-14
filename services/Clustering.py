@@ -21,9 +21,9 @@ class Clustering:
     
     
     
-    def distribute(self):
+    def distribute(self) -> List[List[int]]:
         class Centroid:
-            def __init__(self,centroid,points):
+            def __init__(self,centroid,points)->None:
                 self.centroid = centroid
                 self.points = points
 
@@ -73,9 +73,52 @@ class Clustering:
                     lat = lat/size
                     long = long/size
                     centroids[centroid].centroid = (lat,long)
+        
 
-        for i in centroids:
-            print(i.centroid)
-            print(i.points)    
+        # class Riders_deleveries:
+        #     def __init__(self,total_volume,points_with_volume) -> None:
+        #         self.total_volume = total_volume
+        #         self.points_with_volume = points_with_volume
+        
+        riders_deleveries = []
+        for i in range(len(centroids)):
+            points_with_volume = []
+            total_volume = 0 
+            for point in centroids[i].points:
+                l = self.item_dims[point[0]][0]
+                b = self.item_dims[point[0]][1]
+                h = self.item_dims[point[0]][2]
+                volume = l*b*h
+                total_volume += volume
+                points_with_volume.append((volume,point[0]))
+            points_with_volume.sort()
+            riders_deleveries.append([total_volume,points_with_volume])
+        
+        riders_deleveries.sort(reverse=True)
 
-                
+        # print(riders_deleveries)
+
+        riders_with_bag_volume = []
+        for i in range(len(self.rider_vol)):
+            riders_with_bag_volume.append((self.rider_vol[i],i))
+        riders_with_bag_volume.sort(reverse=True)
+
+        dictionary_for_riders = {}
+        for i in range(len(riders_with_bag_volume)):
+            while riders_with_bag_volume[i][0]<=riders_deleveries[i][0]:
+                riders_deleveries[i][0] = riders_deleveries[i][0] - riders_deleveries[i][1][0][0]
+                riders_deleveries[i][1].pop(0)
+            delevery_points = []
+            for j in riders_deleveries[i][1]:
+                delevery_points.append(j[1])
+            dictionary_for_riders[i] = delevery_points
+        
+        # final output
+        riders_with_final_deliveries = []
+        for i in range(self.no_riders):
+            riders_with_final_deliveries.append([])
+
+        for i in range(self.no_riders):
+            riders_with_final_deliveries[i] = dictionary_for_riders[i]
+        
+        return riders_with_final_deliveries
