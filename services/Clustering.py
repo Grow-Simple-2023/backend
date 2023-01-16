@@ -2,6 +2,7 @@ from typing import List,Tuple
 import random as rd
 import math
 
+# to calculate distance between pair of lat and long
 def distance(origin, destination)->float:
     lat1, lon1 = origin
     lat2, lon2 = destination
@@ -14,6 +15,8 @@ def distance(origin, destination)->float:
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = radius * c
     return d
+
+# to create cluster for deliveries
 class Clustering:
     
     item_dims: List[Tuple[float]]
@@ -34,15 +37,20 @@ class Clustering:
         self.rider_vol = rider_vol
     
     def distribute(self) -> List[List[int]]:
+
+        # class which keeps track of centroid in clusters
         class Centroid:
             def __init__(self,centroid,points)->None:
                 self.centroid = centroid
                 self.points = points
 
-        
-        epochs = 500
+        #used for checking no repetition of centroid for random picking 
         index = []
+
+        # list of centroids
         centroids = []
+
+        # picks random number of centroids and stores in centroids list
         for i in range(self.no_riders):
             while True:
                 a = rd.randint(0,len(self.item_lat_long)-1)
@@ -55,13 +63,22 @@ class Clustering:
         # for i in centroids:
         #     print(i.centroid)
         #     print(i.points)
-        for i in range(50):
+
+        # number of times to run 
+        epochs = 100
+
+        for i in range(epochs):
+
+            # to empty points in all centroids
             for centroid in range(len(centroids)):
                 centroids[centroid].points = []
             
+            # main clustering starts here 
             for point in range(len(self.item_lat_long)):
                 min_distance  = float('inf')
+                # for storing centroid index of current point
                 centroid_index = 0
+                # checking which centroid is near
                 for j in range(len(centroids)):
                     centroid = centroids[j].centroid
                     lat1 = self.item_lat_long[point][0]
@@ -74,7 +91,9 @@ class Clustering:
                         centroid_index = j
                         min_distance = d
                 centroids[centroid_index].points.append((point,self.item_lat_long[point]))
+            # main clustering ends here
             
+            # updating centroid
             for centroid in range(len(centroids)):
                 lat = 0
                 long = 0
@@ -90,12 +109,8 @@ class Clustering:
         # for k in centroids:
         #     print(k.centroid)
         #     print(k.points)
-
-        # class Riders_deleveries:
-        #     def __init__(self,total_volume,points_with_volume) -> None:
-        #         self.total_volume = total_volume
-        #         self.points_with_volume = points_with_volume
         
+        # calculating volume of deliveries
         riders_deleveries = []
         for i in range(len(centroids)):
             points_with_volume = []
@@ -110,20 +125,24 @@ class Clustering:
             points_with_volume.sort()
             riders_deleveries.append([total_volume,points_with_volume])
         
+        # sorting deliveries in decreasing order
         riders_deleveries.sort(reverse=True)
 
-        # print(riders_deleveries)
-
+        # storing volume of rider bag and in riders_with_bag_volume 
         riders_with_bag_volume = []
         for i in range(len(self.rider_vol)):
             riders_with_bag_volume.append((self.rider_vol[i],i))
+        # sorting bag volume of rider in decreasing order
         riders_with_bag_volume.sort(reverse=True)
 
+        # allocating deliveries to riders
         dictionary_for_riders = {}
         for i in range(len(riders_with_bag_volume)):
+            # removing deliveries which does not fit
             while riders_with_bag_volume[i][0]<=riders_deleveries[i][0]:
                 riders_deleveries[i][0] = riders_deleveries[i][0] - riders_deleveries[i][1][0][0]
                 riders_deleveries[i][1].pop(0)
+            # storing points in delevery points
             delevery_points = []
             for j in riders_deleveries[i][1]:
                 delevery_points.append(j[1])
