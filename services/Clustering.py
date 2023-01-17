@@ -65,7 +65,7 @@ class Clustering:
         #     print(i.points)
 
         # number of times to run 
-        epochs = 100
+        epochs = 20
 
         for i in range(epochs):
 
