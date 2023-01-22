@@ -2,11 +2,12 @@ from Clustering import Clustering
 import random
 import time
 import matplotlib.pyplot as plt 
+from tqdm import tqdm
 
 # import matplotlib.pyplot as plt
 timet = []
 deliveries = []
-for p in range(1,51):
+for p in tqdm(range(1,51)):
     no_of_riders = p
     no_of_deliveries = p*20
     deliveries.append(no_of_deliveries)
