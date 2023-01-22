@@ -1,1 +1,0 @@
-os.getenv("MONGO_PASSWORD")
