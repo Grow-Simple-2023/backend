@@ -1,2 +1,12 @@
 # backend
 Backend In FastAPI for Grow Simplee
+
+1. Intsall requirements.txt
+```
+pip intsall -r requirements.txt
+```
+2. In the root directory run
+```
+uvicorn main:app --reload
+```
+3. For documentation open the following URL: http://localhost:8000/api/
