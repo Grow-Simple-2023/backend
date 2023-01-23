@@ -1,0 +1,21 @@
+'''
+General:
+
+1. Login
+2. Signup
+
+Admin:
+1. Dashboard Info
+2. Get all items
+3. Distribute items to riders
+4. Add/remove pickup points
+
+Rider:
+1. Get all orders.
+2. Item and status update.
+
+
+ML Model:
+1. Photo to dimention API
+
+'''
