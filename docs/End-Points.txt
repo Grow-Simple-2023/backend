@@ -19,3 +19,15 @@ ML Model:
 1. Photo to dimention API
 
 '''
+
+
+'''
+Role Based Access: Varendra
+Database planning schema: Pavan/Shashank
+Python mongo db data functions: Vyshnavi
+End-points, Admin: Pavan/Shashank
+Varendra: Riders API
+
+ML: Vyshnavi
+
+'''
