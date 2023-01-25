@@ -1,18 +1,52 @@
-User: ID, 
-	phone_no, 
-	password, 
-	role
+user: 
+	id: ObjectID, 
+	name {
+		first: str, 
+		last: str
+	}
+	phone_no: str, 
+	password: str, 
+	role: enum[ADMIN, RIDER]
 
-Item: item_id, 
-	title, 
-	description {length, breadth, height, weight}, 
-	address, 
-	location {latitude, longitude}, 
-	EDD, 
-	control {is_fulfilled, is_delivery, is_pickup, is_assigned, is_cancelled}, 
-	OTP (same OTP for same (address, EDD))
+item: 
+	id: ObjectID, 
+	user_id: ObjectID (from user id),
+	title: str, 
+	description {
+		length: float, 
+		breadth: float, 
+		height: float, 
+		weight: float
+	}, 
+	address: str, 
+	location: {
+		latitude: float, 
+		longitude: float
+	}, 
+	EDD: datetime, 
+	control {
+		is_fulfilled: bool, 
+		is_delivery: bool, 
+		is_pickup: bool, 
+		is_assigned: bool, 
+		is_cancelled: bool
+	}, 
+	OTP: int [same OTP for same (address, EDD)]
 
-Route: route_id, 
-	rider_id, 
-	bag_description {length, breadth, height, weight}, 
-	item_ids
+route: 
+	id: ObjectID, 
+	rider_id ObjectID (from user_id), 
+	rider_location: List[{
+		latitude: float, 
+		longitude: float,
+		time: long long int
+	}]
+	bag_description {
+		length: float, 
+		breadth: float, 
+		height: float
+	}, 
+	item_ids: List[ObjectID] (From Item id)
+	route_end_otp: int
+
+route_archive: ! Same as route but for routes that are completed !
