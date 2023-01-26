@@ -5,6 +5,7 @@ import copy
 import subprocess
 from time import time
 from typing import List, Tuple, Set
+from services.Clustering import distance
 
 class TSP:
     
@@ -12,11 +13,20 @@ class TSP:
     graph: List[List[float]]
     node_weight: List[float]
 
-    def __init__(self, graph: List[List[float]], node_weight: List[float]) -> None:
-        self.graph = graph
-        self.node_weight = node_weight
-        self.N = len(graph)
+    def __init__(self, item_lat_long: List[Tuple[float]]) -> None:
+        self.graph = self.generate_graph(item_lat_long)
+        # self.node_weight = node_weight
+        self.N = len(self.graph)
         if(self.N==0): raise ValueError("Graph Must Have Atleast One Node")
+    
+    def generate_graph(self, item_lat_long: List[Tuple[float]]) -> List[List[float]]:
+        n = len(item_lat_long)
+        graph = [[0 for _ in range(n)] for _ in range(n)]
+        for i in range(n-1):
+            for j in range(i+1, n):
+                graph[i][j] = distance(item_lat_long[i], item_lat_long[j])
+                graph[j][i] = graph[i][j]
+        return graph
     
     def get_path_cost(self, path: List[int]) -> float:
         cost = 0
