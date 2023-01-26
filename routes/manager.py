@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from config.db_config import db
+<<<<<<< HEAD
 from datetime import datetime
 import json
+=======
+>>>>>>> b52b9f6ec3efbd6b355173f7f99a6a19f40a5d9f
 
 router = APIRouter()
 
@@ -20,8 +23,20 @@ async def on_time_delivery_percentage():
     percentage_of_successful_deliveries = (no_of_successful_deleveries/total_deliveries_to_be_done)*100
     return {"percentage": percentage_of_successful_deliveries}
 
-@router.get("/curr-items-in-del")
+@router.get("/items-in-delivery")
 async def current_items_in_delivery():
     items_in_delivery = list(db.item.find({"control.is_assigned":True,"control.is_fulfilled":False}, {"_id": 0}))
     return {"items_in_delivery": items_in_delivery} 
                                                 
+@router.get("/items/{item_id}")
+async def get_item(item_id: str):
+    return db.item.find_one({"id": item_id}, {"_id": 0})
+
+@router.get("/riders")
+async def get_rider():
+    documents = db.user.find({"role": "RIDER"}, {"_id": 0})
+    return [document for document in documents]
+
+@router.get("/riders/{rider_no}")
+async def get_rider(rider_no: str):
+    return db.user.find_one({"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
