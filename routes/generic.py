@@ -3,7 +3,7 @@ from config.db_config import db
 from models.model import *
 from dotenv import load_dotenv
 from fastapi import APIRouter, Request, HTTPException, status
-from services.auth import check_user_exists, add_new_user
+from services.auth import check_user_exists, add_new_user, verify_credentials, create_token
 
 router = APIRouter()
 
@@ -30,5 +30,9 @@ async def register(register: Register):
     return user 
 
 @router.post("/login")
-async def login():
-    return {"data":"data"}
+async def login(login: Login):
+    if(not login.phone_no.isnumeric() or len(login.phone_no) != 10):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide correct phone number")
+    user = verify_credentials(phone_no=login.phone_no, password=login.password)
+    token = create_token(phone_no=user["phone_no"], role=user["role"])
+    return token

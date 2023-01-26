@@ -46,4 +46,23 @@ def add_new_user(phone_no, first_name, last_name, password, role ):
             raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+  
+
+def verify_credentials(phone_no, password):
+  try:
+      user = db.user.find_one({"phone_no": phone_no})
+      del user['_id']
+      if user:
+          return {
+              "phone_no": user["phone_no"],
+              "role": user["role"]
+          }
+  except Exception as e:
+      raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+def create_token(phone_no, role):
+    exp = 3600 * float(os.getenv("TOKEN_EXP")) * 24
+    encoded = jwt.encode({"phone_no": phone_no, "role": role[0], "exp": int(time())+exp}, os.getenv("PRIVATE_KEY"), algorithm="HS256")
+    token = Token(**{"access_token": encoded, "token_type": "Bearer"})
+    return token
