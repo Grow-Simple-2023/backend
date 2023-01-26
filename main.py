@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from routes import manager, rider, customer, generic
+from routes import manager, rider, generic
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
