@@ -17,3 +17,6 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+class Login(BaseModel):
+    phone_no: str
+    password: str

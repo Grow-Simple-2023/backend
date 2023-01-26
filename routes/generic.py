@@ -29,3 +29,6 @@ async def register(register: Register):
     print(user)
     return user 
 
+@router.post("/login")
+async def login():
+    return {"data":"data"}
