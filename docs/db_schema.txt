@@ -49,4 +49,11 @@ route:
 	item_ids: List[ObjectID] (From Item id)
 	route_end_otp: int
 
-route_archive: ! Same as route but for routes that are completed !
+route_archive:
+	id: ObjectID
+	List[{
+		latitude: float, 
+		longitude: float,
+		time: long long int
+	}]
+	item_ids: List[ObjectID] (From Item id)
