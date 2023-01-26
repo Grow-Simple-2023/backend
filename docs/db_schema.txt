@@ -30,7 +30,8 @@ item:
 		is_pickup: bool, 
 		is_assigned: bool, 
 		is_cancelled: bool
-	}, 
+	},
+	delivered_on: datetime
 	OTP: int [same OTP for same (address, EDD)]
 
 route: 
