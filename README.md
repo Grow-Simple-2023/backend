@@ -3,7 +3,7 @@ Backend In FastAPI for Grow Simplee
 
 1. Intsall requirements.txt
 ```
-pip intsall -r requirements.txt
+pip install -r requirements.txt
 ```
 2. In the root directory run
 ```
