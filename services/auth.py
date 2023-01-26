@@ -32,7 +32,7 @@ def add_new_user(phone_no, first_name, last_name, password, role ):
             },
             "phone_no": phone_no,
             "password":password,
-            "role":[role]
+            "role":role
         })
         try:
             user = db.user.find_one({"phone_no": phone_no})
@@ -47,19 +47,22 @@ def add_new_user(phone_no, first_name, last_name, password, role ):
 
 def verify_credentials(phone_no, password):
   try:
-      user = db.user.find_one({"phone_no": phone_no})
+      user = db.user.find_one({"phone_no": phone_no, "password": password})
+      print(user)
       del user['_id']
       if user:
           return {
               "phone_no": user["phone_no"],
               "role": user["role"]
           }
+      else:
+          raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found. Please enter correct credentials!")
   except Exception as e:
-      raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+      raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Please enter correct credentials")
 
 
 def create_token(phone_no, role):
     exp = 3600 * float(os.getenv("TOKEN_EXP")) * 24
-    encoded = jwt.encode({"phone_no": phone_no, "role": role[0], "exp": int(time())+exp}, os.getenv("PRIVATE_KEY"), algorithm="HS256")
+    encoded = jwt.encode({"phone_no": phone_no, "role": role, "exp": int(time())+exp}, os.getenv("PRIVATE_KEY"), algorithm="HS256")
     token = Token(**{"access_token": encoded, "token_type": "Bearer"})
     return token
