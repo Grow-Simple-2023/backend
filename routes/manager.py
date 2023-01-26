@@ -87,6 +87,11 @@ async def distribute_items(distribution_info: DistributeModel):
         for id in cluster: temp_lat_long.append(item_lat_long[id])
         tsp = TSP(temp_lat_long)
         temp_path, temp_path_cost, _ = tsp.approximation_1_5()
+        for i in range(3):
+            temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
+            temp_path, temp_path_cost, _ = tsp.three_edge_switch(2, temp_path)
+            temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)  
+        # temp_path, temp_path_cost, _ = tsp.perfect()
         total_cost += temp_path_cost
         path = []
         for node in temp_path: path.append(cluster[node])
