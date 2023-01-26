@@ -1,10 +1,7 @@
 from fastapi import APIRouter
 from config.db_config import db
-<<<<<<< HEAD
 from datetime import datetime
 import json
-=======
->>>>>>> b52b9f6ec3efbd6b355173f7f99a6a19f40a5d9f
 
 router = APIRouter()
 
