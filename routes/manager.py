@@ -29,10 +29,16 @@ async def current_items_in_delivery():
 async def get_item(item_id: str):
     return db.item.find_one({"id": item_id}, {"_id": 0})
 
+@router.get("/unfullfilled-items")
+async def get_item(item_id: str):
+    documents = list(db.item.find({"control.is_fullfilled": False}, {"_id": 0}))
+    return {"unfullfilled_items": documents}
+
+
 @router.get("/riders")
 async def get_rider():
-    documents = db.user.find({"role": "RIDER"}, {"_id": 0})
-    return [document for document in documents]
+    documents = list(db.user.find({"role": "RIDER"}, {"_id": 0}))
+    return {"riders": documents}
 
 @router.get("/riders/{rider_no}")
 async def get_rider(rider_no: str):
