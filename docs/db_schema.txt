@@ -10,7 +10,7 @@ user:
 
 item: 
 	id: ObjectID, 
-	user_id: ObjectID (from user id),
+	user_id: ObjectID,
 	title: str, 
 	description {
 		length: float, 
