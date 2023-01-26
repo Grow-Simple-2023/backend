@@ -90,7 +90,8 @@ async def distribute_items(distribution_info: DistributeModel):
         for i in range(3):
             temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
             temp_path, temp_path_cost, _ = tsp.three_edge_switch(2, temp_path)
-            temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)  
+            temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
+        temp_path, temp_path_cost, _ = tsp.node_edge_insert(2, temp_path) 
         # temp_path, temp_path_cost, _ = tsp.perfect()
         total_cost += temp_path_cost
         path = []

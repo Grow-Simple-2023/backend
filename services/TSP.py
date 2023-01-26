@@ -276,3 +276,20 @@ class TSP:
         if verbose: print("1.5 Approximation:", path_cost, f"({delta} sec)")
         return path, path_cost, delta
     
+    def node_edge_insert(self, iterations: int, path: List[int], verbose: bool = False) -> List[float]:
+        time_start = time()
+        for _ in range(iterations):
+            for i in range(len(path)):
+                temp_path = path[:]
+                node = path[i]
+                del temp_path[i]
+                for j in range(len(temp_path)):
+                    temp_path = temp_path[:]
+                    temp_path.insert(j, node)
+                    if self.get_path_cost(temp_path) < self.get_path_cost(path):
+                        path = temp_path[:]
+                    del temp_path[j]
+                    
+        path_cost = self.get_path_cost(path)
+        delta = time()-time_start
+        return path, path_cost, delta
