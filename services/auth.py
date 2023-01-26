@@ -38,10 +38,7 @@ def add_new_user(phone_no, first_name, last_name, password, role ):
             user = db.user.find_one({"phone_no": phone_no})
             del user["_id"]
             if user:
-                return {
-                    "user": user,
-                    "message": "User added successfully!"
-                }
+                return user
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:

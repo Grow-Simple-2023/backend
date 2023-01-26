@@ -26,8 +26,9 @@ async def register(register: Register):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide correct phone number")
     check_user_exists(register.phone_no)
     user = add_new_user(phone_no=register.phone_no, first_name=register.first_name, last_name=register.last_name, password=register.password, role=register.role)
-    print(user)
-    return user 
+    token = create_token(phone_no=user["phone_no"], role=user["role"])
+    return {"user": user, 
+            "auth": token} 
 
 @router.post("/login")
 async def login(login: Login):
