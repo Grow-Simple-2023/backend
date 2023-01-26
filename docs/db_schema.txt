@@ -24,10 +24,10 @@ item:
 	}, 
 	EDD: datetime, 
 	control {
-		is_fulfilled: bool, 
-		is_delivery: bool, 
-		is_pickup: bool, 
-		is_assigned: bool, 
+		is_fulfilled: bool, >> pickedup | delivered
+		is_delivery: bool,  >> going for delivery
+		is_pickup: bool, >> going for pickup
+		is_assigned: bool, >> rider assigned
 		is_cancelled: bool
 	},
 	delivered_on: datetime
