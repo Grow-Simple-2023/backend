@@ -23,7 +23,7 @@ def check_user_exists(phone_no):
     return 
 
 def add_new_user(phone_no, first_name, last_name, password, role ):
-    print("hello world from add new user function ")
+    # print("hello world from add new user function ")
     try:
         result = db.user.insert_one({
             "name":{

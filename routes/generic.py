@@ -21,6 +21,8 @@ async def generic_home():
 async def register(register: Register):
     if register.password!=register.confirm_password:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
+    if len(register.password)<8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password length must be atleast 8")
     token = Token(**{"access_token": "encoded", "token_type": "Bearer"})
     if(not register.phone_no.isnumeric() or len(register.phone_no) != 10):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide correct phone number")
