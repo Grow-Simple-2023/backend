@@ -10,8 +10,6 @@ from fastapi import HTTPException, status, Request
 
 
 def check_user_exists(phone_no):
-    print(db.user.find_one({"phone_no":  phone_no}))
-    print("hello world")
     user = None
     try:
         user = db.user.find_one({"phone_no":phone_no})
@@ -48,7 +46,6 @@ def add_new_user(phone_no, first_name, last_name, password, role ):
 def verify_credentials(phone_no, password):
   try:
       user = db.user.find_one({"phone_no": phone_no, "password": password})
-      print(user)
       del user['_id']
       if user:
           return {
@@ -84,6 +81,7 @@ def decode_jwt(request: Request):
 
 def check_role(load, roles):
     try:
+        print(load)
         assert load["role"] in roles
     except Exception as e:
         print(e)
