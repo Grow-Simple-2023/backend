@@ -3,7 +3,7 @@ from config.db_config import db
 from models.model import *
 from dotenv import load_dotenv
 from fastapi import APIRouter, Request, HTTPException, status, Depends
-from services.auth import check_user_exists, add_new_user, verify_credentials, create_token, decode_jwt, check_role
+from services.auth import *
 
 router = APIRouter()
 

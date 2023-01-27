@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Depends
 from config.db_config import db
 from datetime import datetime
 import json
@@ -7,6 +7,7 @@ from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
 from time import time, sleep
 import random
+from services.auth import *
 
 router = APIRouter()
 
@@ -17,7 +18,8 @@ async def manager_home():
 
 # to calculate on time delivery percentage
 @router.get("/OTD-percentage")
-async def on_time_delivery_percentage():
+async def on_time_delivery_percentage(user_data = Depends(decode_jwt)):
+    verify_role(user_data, ["MANAGER"])
     no_of_successful_deleveries = len(list(db.item.find({"EDD":{"$lte":str(datetime.now())},
                                                       "control.is_fulfilled":True,
                                                       "$expr":{"$lte":["$delivered_on","$EDD"]},
