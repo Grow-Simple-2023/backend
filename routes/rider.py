@@ -52,11 +52,12 @@ async def item_status_update(item_status: ItemStatusModel, user_data = Depends(d
 @router.delete("/end-route")
 async def end_route(route_end_model: RouteEndModel, user_data = Depends(decode_jwt)):
     check_role(user_data, ["ADMIN", "RIDER"])
-    route_info = db.route.find_one({"rider_id": route_end_model.rider_phone_no, 
+    phone_no = user_data["phone_no"]
+    route_info = db.route.find_one({"rider_id": phone_no, 
                                     "route_otp": route_end_model.route_otp}, {"_id": 0})
     if not route_info:
-        raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {route_end_model.rider_phone_no}")
-    db.route.delete_one({"rider_id": route_end_model.rider_phone_no})
+        raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {phone_no}")
+    db.route.delete_one({"rider_id": phone_no})
     for item in route_info["items_in_order"]:
         db.item.update_one({"id": item["id"]}, {"$set": {"control.is_assigned": False,
                                                         "control.is_fulfilled": False,

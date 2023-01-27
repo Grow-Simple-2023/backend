@@ -13,7 +13,6 @@ class ItemStatusModel(BaseModel):
     phone_no: str
 
 class RouteEndModel(BaseModel):
-    rider_phone_no: str
     route_otp: int
 
 class Role(str, Enum):
