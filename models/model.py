@@ -12,7 +12,6 @@ class ItemStatusModel(BaseModel):
     OTP: int
 
 class RouteEndModel(BaseModel):
-    rider_phone_no: str
     route_otp: int
 
 class Role(str, Enum):
