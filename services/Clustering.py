@@ -23,18 +23,21 @@ class Clustering:
     item_lat_long: List[Tuple[float]]
     no_riders: int
     rider_vol: List[float]
+    EDD: List[str]
     
-    def __init__(self, item_dims: List[Tuple[float]], item_lat_long: List[Tuple[float]], no_riders: int, rider_vol: List[float]) -> None:
+    def __init__(self, item_dims: List[Tuple[float]], item_lat_long: List[Tuple[float]], no_riders: int, rider_vol: List[float],EDD:List[str]) -> None:
         assert len(item_dims)>0
         assert len(item_dims)==len(item_lat_long)
         assert len(item_dims[0])==3
         assert len(item_lat_long[0])==2
         assert no_riders<len(item_dims)
+        assert len(EDD) == len(item_dims)
         
         self.item_dims = item_dims
         self.item_lat_long = item_lat_long
         self.no_riders = no_riders
         self.rider_vol = rider_vol
+        self.EDD = EDD
     
     def distribute(self) -> List[List[int]]:
 
@@ -113,7 +116,8 @@ class Clustering:
         # calculating volume of deliveries
         riders_deleveries = []
         for i in range(len(centroids)):
-            points_with_volume = []
+            # points_with_volume = []
+            points_with_EDD = []
             total_volume = 0 
             for point in centroids[i].points:
                 l = self.item_dims[point[0]][0]
@@ -121,9 +125,12 @@ class Clustering:
                 h = self.item_dims[point[0]][2]
                 volume = l*b*h
                 total_volume += volume
-                points_with_volume.append((volume,point[0]))
-            points_with_volume.sort()
-            riders_deleveries.append([total_volume,points_with_volume])
+                points_with_EDD.append((self.EDD[point[0]],volume,point[0]))
+                # points_with_volume.append((volume,point[0]))
+            # points_with_volume.sort()
+            points_with_EDD.sort(reverse=True)
+            # riders_deleveries.append([total_volume,points_with_volume])
+            riders_deleveries.append([total_volume,points_with_EDD])
         
         # sorting deliveries in decreasing order
         riders_deleveries.sort(reverse=True)
@@ -140,12 +147,12 @@ class Clustering:
         for i in range(len(riders_with_bag_volume)):
             # removing deliveries which does not fit
             while riders_with_bag_volume[i][0]<=riders_deleveries[i][0]:
-                riders_deleveries[i][0] = riders_deleveries[i][0] - riders_deleveries[i][1][0][0]
+                riders_deleveries[i][0] = riders_deleveries[i][0] - riders_deleveries[i][1][0][1]
                 riders_deleveries[i][1].pop(0)
             # storing points in delevery points
             delevery_points = []
             for j in riders_deleveries[i][1]:
-                delevery_points.append(j[1])
+                delevery_points.append(j[2])
             dictionary_for_riders[i] = delevery_points
         
         # final output
