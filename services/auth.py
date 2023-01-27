@@ -66,3 +66,26 @@ def create_token(phone_no, role):
     encoded = jwt.encode({"phone_no": phone_no, "role": role, "exp": int(time())+exp}, os.getenv("PRIVATE_KEY"), algorithm="HS256")
     token = Token(**{"access_token": encoded, "token_type": "Bearer"})
     return token
+
+
+def decode_jwt(request: Request):
+    token = request.headers.get('Credentials')
+    try:
+        assert token
+        tokens = token.split()
+        assert tokens[0]=="Bearer"
+        payload = jwt.decode(tokens[1], os.getenv("PRIVATE_KEY"), algorithms=["HS256"])
+        phone_no = payload["phone_no"]
+        role = payload["role"]
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials")
+    return {"phone_no": phone_no, "role": role}
+
+def check_role(load, roles):
+    try:
+        assert load["role"] in roles
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Un-Authorized")
+    return

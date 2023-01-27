@@ -2,8 +2,8 @@
 from config.db_config import db
 from models.model import *
 from dotenv import load_dotenv
-from fastapi import APIRouter, Request, HTTPException, status
-from services.auth import check_user_exists, add_new_user, verify_credentials, create_token
+from fastapi import APIRouter, Request, HTTPException, status, Depends
+from services.auth import check_user_exists, add_new_user, verify_credentials, create_token, decode_jwt, check_role
 
 router = APIRouter()
 
@@ -39,3 +39,16 @@ async def login(login: Login):
     user = verify_credentials(phone_no=login.phone_no, password=login.password)
     token = create_token(phone_no=user["phone_no"], role=user["role"])
     return token
+
+@router.get("/users")
+async def get_users(load: str = Depends(decode_jwt)):
+    check_role(load, ["ADMIN"])
+    users = []
+    for user in db.user.find():
+        del user["_id"]
+        users.append(user)
+    return users
+
+@router.get("/decode-token")
+async def decode_token(load: str = Depends(decode_jwt)):
+    return load
