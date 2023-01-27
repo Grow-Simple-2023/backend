@@ -25,6 +25,8 @@ async def item_status_update(item_status: ItemStatusModel):
     if(OTP["OTP"] == item_status.OTP):
         if(item_status.status==1):
             db.item.update_one({"id": item_status.item_id}, {"$set": {"control.is_fulfilled": True,
+                                                                      "control.is_assigned": False,
+                                                                      "control.is_cancelled": False,
                                                                       "delivered_on": str(datetime.now())}})
             db.route.update_one({"rider_id": item_status.phone_no}, {"$pull": {"items_in_order": 
                                                                                {"id": item_status.item_id}}})
@@ -43,13 +45,13 @@ async def item_status_update(item_status: ItemStatusModel):
 
 @router.delete("/end-route")
 async def end_route(route_end_model: RouteEndModel):
-    route_info = db.route.find_one({"rider_id": route_end_model.rider_id, 
+    route_info = db.route.find_one({"rider_id": route_end_model.rider_phone_no, 
                                     "route_otp": route_end_model.route_otp}, {"_id": 0})
     if not route_info:
-        raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {route_end_model.rider_id}")
-    db.route.delete_one({"rider_id": route_end_model.rider_id})
+        raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {route_end_model.rider_phone_no}")
+    db.route.delete_one({"rider_id": route_end_model.rider_phone_no})
     for item in route_info["items_in_order"]:
         db.item.update_one({"id": item["id"]}, {"$set": {"control.is_assigned": False,
                                                         "control.is_fulfilled": False,
                                                         "conrtol.is_cancelled": False}})
-    return db.route.find_one({"rider_id": route_end_model.rider_id}, {"_id": 0})
+    return route_info

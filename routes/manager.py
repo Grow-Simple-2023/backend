@@ -5,7 +5,7 @@ import json
 from models.model import DistributeModel
 from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
-from time import time
+from time import time, sleep
 import random
 
 router = APIRouter()
@@ -102,6 +102,7 @@ async def distribute_items(distribution_info: DistributeModel):
     cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol, EDD)
     distribution = cluster.distribute()
     
+    print(distribution)
     
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
@@ -132,6 +133,8 @@ async def distribute_items(distribution_info: DistributeModel):
         for j in range(len(distribution[i])):
             distribution[i][j]-=1
     
+    print(all_routes)
+    
     global_data_info = []
     documents = []
     for index, route in enumerate(all_routes):
@@ -143,10 +146,10 @@ async def distribute_items(distribution_info: DistributeModel):
             item_id = ""
             if node!=-1: item_id = item_id = distribution_info.item_ids[node]
             else: item_id = "Hub"
-            data['item_info'].append(db.item.find_one({"id": item_id}, {"_id": 0}))
             db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
                                                           "control.is_fulfilled": False,
                                                           "control.is_cancelled": False}})
+            data['item_info'].append(db.item.find_one({"id": item_id}, {"_id": 0}))
         
         data['item_info'].append(db.item.find_one({"id": "Hub"}, {"_id": 0}))
         document = {
@@ -174,7 +177,7 @@ async def delete_pickup(item_id: str):
                                   "control.is_pickup": True}, {"_id": 0})
     if not item_info: 
         raise HTTPException(status_code=404, detail=f"Item does not exist or is not a pickup: {item_id}")
-    route_info = db.route.update_one({"id": item_id}, {"$pull": {"items_in_order": {"id": item_id}}})
+    route_info = db.route.update_one({"items_in_order.id": item_id}, {"$pull": {"items_in_order": {"id": item_id}}})
     db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False,
                                                     "control.is_pickup": False,
                                                     "control.is_fulfilled": True,
@@ -186,6 +189,8 @@ async def delete_pickup(item_id: str):
 async def add_pickup(item_id: str):
     item_info = db.item.find_one({"id": item_id, 
                                   "control.is_fulfilled": True,
+                                  "control.is_delivery": True,
+                                  "control.is_pickup": False,
                                   "control.is_assigned": False, 
                                   "control.is_cancelled": False}, {"_id": 0})
     if not item_info:
@@ -194,18 +199,22 @@ async def add_pickup(item_id: str):
     item_lat_long = tuple(item_info["location"].values())
     all_routes = list(db.route.find({}))
     min_cost_index_volume_bags = []
+    item_dims = tuple(item_info["description"].values())
     for route in all_routes:
-        item_dims = tuple(item_info["description"].values())
         bag_dims = tuple(route["bag_description"].values())
         cost_index_volume_bag = {
             "bag": bag_dims[0]*bag_dims[1]*bag_dims[2],
             "volume": item_dims[0]*item_dims[1]*item_dims[2],
             "cost": float('inf'),
-            "index": None
+            "index": None,
+            "rider_id": route["rider_id"]
         }
         for i in range(len(route["items_in_order"])):
-            item_dims = tuple(route["items_in_order"][i]["description"].values())
-            cost_index_volume_bag["volume"] += item_dims[0]*item_dims[1]*item_dims[2]
+            if route["items_in_order"][i]["id"]!="Hub":
+                temp_item_dims = tuple(route["items_in_order"][i]["description"].values())
+            else:
+                temp_item_dims = (0, 0, 0, 0)
+            cost_index_volume_bag["volume"] += temp_item_dims[0]*temp_item_dims[1]*temp_item_dims[2]
             if cost_index_volume_bag["volume"] > cost_index_volume_bag["bag"]: break
             
             a = tuple(route['rider_location'][-1].values()) if i==0 else tuple(route["items_in_order"][i-1]["location"].values())
@@ -221,17 +230,21 @@ async def add_pickup(item_id: str):
                                                     "control.is_fulfilled": False,
                                                     "conrtol.is_cancelled": False,
                                                     "control.is_delivery": False}})
-    for min_cost_index_volume_bag in min_cost_index_volume_bags:
+    
+    for index, min_cost_index_volume_bag in enumerate(min_cost_index_volume_bags):
+        if index>3: break
         if min_cost_index_volume_bag[3]:
-            if min_cost_index_volume_bag["volume"]<min_cost_index_volume_bag["bag"]:
-                db.route.update_one({"rider_id": route["rider_id"]}, 
-                                    {"$push": {"items_in_order": item_info,
-                                               "$position": min_cost_index_volume_bag["index"]}})
+            if min_cost_index_volume_bag[1]<min_cost_index_volume_bag[0]:
                 db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True}})
-                return {"item_info": item_info, "is_assigned": True, "index": min_cost_index_volume_bag["index"]}
+                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]}, 
+                                    {"$push": {"items_in_order": {"$each": [db.item.find_one({"id": item_id}, {"_id": 0})],
+                                               "$position": min_cost_index_volume_bag[3]}}})
+                return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}), 
+                        "is_assigned": True, 
+                        "index": min_cost_index_volume_bag[3], 
+                        "rider_id": min_cost_index_volume_bag[4]}
     
     db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False}})
     return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}), 
-            "is_assigned": False, 
-            "index": None}
+            "is_assigned": False}
 
