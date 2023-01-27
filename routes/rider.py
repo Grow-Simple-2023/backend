@@ -1,6 +1,6 @@
-from fastapi import APIRouter,HTTPException, Request as HTTPRequest
+from fastapi import APIRouter,HTTPException
 from config.db_config import db
-from models.model import ItemStatusModel
+from models.model import ItemStatusModel, RouteEndModel
 from datetime import datetime
 router = APIRouter()
 
@@ -12,7 +12,7 @@ async def rider_home():
 @router.get("/route/{phone_no}")
 async def get_route_by_number(phone_no: str):
     route = db.route.find_one({"rider_id": phone_no}, {"_id": 0})
-    if not route: raise HTTPException(status_code=404, detail="Route does not exist")
+    if not route: raise HTTPException(status_code=404, detail=f"Rider not assigned to a route: {phone_no}")
     return route
 
 @router.post("/item-status-update")
@@ -40,3 +40,16 @@ async def item_status_update(item_status: ItemStatusModel):
             raise HTTPException(status_code=404, detail="Status error")
     else:
         raise HTTPException(status_code=404, detail="OTP does not match")
+
+@router.delete("/end-route")
+async def end_route(route_end_model: RouteEndModel):
+    route_info = db.route.find_one({"rider_id": route_end_model.rider_id, 
+                                    "route_otp": route_end_model.route_otp}, {"_id": 0})
+    if not route_info:
+        raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {route_end_model.rider_id}")
+    db.route.delete_one({"rider_id": route_end_model.rider_id})
+    for item in route_info["items_in_order"]:
+        db.item.update_one({"id": item["id"]}, {"$set": {"control.is_assigned": False,
+                                                        "control.is_fulfilled": False,
+                                                        "conrtol.is_cancelled": False}})
+    return db.route.find_one({"rider_id": route_end_model.rider_id}, {"_id": 0})

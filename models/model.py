@@ -10,3 +10,7 @@ class ItemStatusModel(BaseModel):
     status: int
     OTP: int
     phone_no: str
+
+class RouteEndModel(BaseModel):
+    rider_phone_no: str
+    route_otp: int
