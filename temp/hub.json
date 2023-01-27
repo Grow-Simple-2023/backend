@@ -1,0 +1,9 @@
+{
+  "id": "Hub",
+  "title": "Hub",
+  "address": "Hub",
+  "location": {
+    "latitude": 30,
+    "longitude": 100
+  }
+}
