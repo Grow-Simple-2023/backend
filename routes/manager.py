@@ -79,7 +79,7 @@ async def distribute_items(distribution_info: DistributeModel):
             raise HTTPException(status_code=404, detail=f"Phone number does not belong to a rider: {phone_no}")
     
     no_riders = len(distribution_info.rider_phone_nos)
-    item_dims, item_lat_long = [], []
+    item_dims, item_lat_long, EDD = [], [], []
     for item_id in distribution_info.item_ids:
         try:
             item_info = db.item.find_one({"id": item_id, "control.is_assigned": False, 
@@ -88,10 +88,11 @@ async def distribute_items(distribution_info: DistributeModel):
             assert item_info
             item_dims.append(tuple(item_info["description"].values()))
             item_lat_long.append(tuple(item_info["location"].values()))
+            EDD.append(item_info["EDD"])
         except Exception as E:
             raise HTTPException(status_code=404, detail=f"Item does not exist or is already assigned: {item_id}")
     
-    cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol)
+    cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol, EDD)
     distribution = cluster.distribute()
     
     
