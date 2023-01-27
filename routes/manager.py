@@ -38,7 +38,10 @@ async def current_items_in_delivery():
                                                 
 @router.get("/items/{item_id}")
 async def get_item(item_id: str):
-    return db.item.find_one({"id": item_id}, {"_id": 0})
+    item = db.item.find_one({"id": item_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Item not found: {item_id}")
+    return item
 
 @router.get("/unassigned-items")
 async def unassigned_items():
@@ -59,12 +62,15 @@ async def get_unassigned_rider():
     a_riders = []
     assigned_riders = list(db.route.find({}, {"_id": 0}))
     for rider in assigned_riders: a_riders.append(rider["rider_id"])
-    documents = list(db.rider.find({"id": {"$nin": assigned_riders}}, {"_id": 0}))
+    documents = list(db.user.find({"phone_no": {"$nin": assigned_riders}, "role":"RIDER"}, {"_id": 0}))
     return {"unassigned_riders": documents}
 
 @router.get("/riders/{rider_no}")
 async def get_rider(rider_no: str):
-    return db.user.find_one({"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
+    rider = db.user.find_one({"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
+    if not rider:
+        raise HTTPException(status_code=404, detail=f"Rider not found: {rider_no}")
+    return rider
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel):
