@@ -7,6 +7,19 @@ from time import time
 from typing import List, Tuple, Set
 from services.Clustering import distance
 
+def road_distance(origin, destination)->float:
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    radius = 6371  # km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+        math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+        math.sin(dlon / 2) * math.sin(dlon / 2))
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    d = radius * c
+    return d
+
 class TSP:
     
     N: int
@@ -24,7 +37,7 @@ class TSP:
         graph = [[0 for _ in range(n)] for _ in range(n)]
         for i in range(n-1):
             for j in range(i+1, n):
-                graph[i][j] = distance(item_lat_long[i], item_lat_long[j])
+                graph[i][j] = road_distance(item_lat_long[i], item_lat_long[j])
                 graph[j][i] = graph[i][j]
         return graph
     
