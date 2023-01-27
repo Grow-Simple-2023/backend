@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from config.db_config import db
 from datetime import datetime
 import json
-from models.model import DistributeModel
+from models.model import DistributeModel, RouteEndModel
 from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
 from time import time
@@ -162,7 +162,7 @@ async def distribute_items(distribution_info: DistributeModel):
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
 
 @router.delete("/delete-pickup/{item_id}")
-def delete_pickup(item_id: str):
+async def delete_pickup(item_id: str):
     item_info = db.item.find_one({"id": item_id, 
                                   "control.is_assigned": True, 
                                   "control.is_pickup": True}, {"_id": 0})
@@ -174,10 +174,10 @@ def delete_pickup(item_id: str):
                                                     "control.is_fulfilled": True,
                                                     "conrtol.is_cancelled": False,
                                                     "control.is_delivery": True}})
-    return item_info
+    return db.item.find_one({"id": item_id}, {"_id": 0})
 
 @router.put("/add-pickup/{item_id}")
-def add_pickup(item_id: str):
+async def add_pickup(item_id: str):
     item_info = db.item.find_one({"id": item_id, 
                                   "control.is_fulfilled": True,
                                   "control.is_assigned": False, 
@@ -225,4 +225,19 @@ def add_pickup(item_id: str):
                 return {"item_info": item_info, "is_assigned": True, "index": min_cost_index_volume_bag["index"]}
     
     db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False}})
-    return {"item_info": item_info, "is_assigned": False, "index": None}
+    return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}), 
+            "is_assigned": False, 
+            "index": None}
+
+@router.delete("/end-route")
+async def end_route(route_end_model: RouteEndModel):
+    route_info = db.route.find_one({"rider_id": route_end_model.rider_id, 
+                                    "route_otp": route_end_model.route_otp}, {"_id": 0})
+    if not route_info:
+        raise HTTPException(status_code=404, detail=f"Rider not assigned a route: {route_end_model.rider_id}")
+    db.route.delete_one({"rider_id": route_end_model.rider_id})
+    for item in route_info["items_in_order"]:
+        db.item.update_one({"id": item["id"]}, {"$set": {"control.is_assigned": False,
+                                                        "control.is_fulfilled": False,
+                                                        "conrtol.is_cancelled": False}})
+    return db.route.find_one({"rider_id": route_end_model.rider_id}, {"_id": 0})
