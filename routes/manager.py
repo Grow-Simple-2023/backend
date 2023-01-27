@@ -58,8 +58,8 @@ async def get_rider():
 async def get_unassigned_rider():
     a_riders = []
     assigned_riders = list(db.route.find({}, {"_id": 0}))
-    
-    documents = list(db.user.find({"role": "RIDER", "control.is_assigned": False}, {"_id": 0}))
+    for rider in assigned_riders: a_riders.append(rider["rider_id"])
+    documents = list(db.rider.find({"id": {"$nin": assigned_riders}}, {"_id": 0}))
     return {"unassigned_riders": documents}
 
 @router.get("/riders/{rider_no}")
@@ -153,10 +153,11 @@ async def distribute_items(distribution_info: DistributeModel):
         global_data_info.append(data)
         documents.append(document)
         
-    # db.route.insert_many(documents)
+    db.route.insert_many(documents)
     # return global_data_info
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
 
-@router.get("/route/{phone_no}")
-def get_route_by_number(phone_no: str):
-    return db.route.find_one({"rider_id": phone_no}, {"_id": 0})
+@router.delete("/delete-pickup/{item_id}")
+def delete_pickup(item_id: str):
+    
+    pass
