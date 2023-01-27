@@ -229,15 +229,3 @@ async def add_pickup(item_id: str):
             "is_assigned": False, 
             "index": None}
 
-@router.delete("/end-route")
-async def end_route(route_end_model: RouteEndModel):
-    route_info = db.route.find_one({"rider_id": route_end_model.rider_id, 
-                                    "route_otp": route_end_model.route_otp}, {"_id": 0})
-    if not route_info:
-        raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {route_end_model.rider_id}")
-    db.route.delete_one({"rider_id": route_end_model.rider_id})
-    for item in route_info["items_in_order"]:
-        db.item.update_one({"id": item["id"]}, {"$set": {"control.is_assigned": False,
-                                                        "control.is_fulfilled": False,
-                                                        "conrtol.is_cancelled": False}})
-    return db.route.find_one({"rider_id": route_end_model.rider_id}, {"_id": 0})
