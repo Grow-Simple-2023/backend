@@ -8,7 +8,7 @@ Admin:
 1. Dashboard Info >> | percentage on time delivery ` | current items in delivery ` | total cost | 
 2. Get all items ` get an item by id `
 3. Distribute items to riders >> heavy `
-4. Add/remove pickup points >> medium  ~`
+4. Add/remove pickup points >> medium `
 5. get all riders `
 
 Rider:
