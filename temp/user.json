@@ -1,6 +1,60 @@
 [
     {
         "name": {
+            "first": "Shashank",
+            "last": "P"
+        },
+        "phone_no": "9483303320",
+        "password": "mypassword",
+        "role": "ADMIN"
+    },
+    {
+        "name": {
+            "first": "Varendra",
+            "last": "Maurya"
+        },
+        "phone_no": "8924873973",
+        "password": "mypassword",
+        "role": "ADMIN"
+    },
+    {
+        "name": {
+            "first": "Pavan",
+            "last": "Kumar"
+        },
+        "phone_no": "9740776505",
+        "password": "mypassword",
+        "role": "ADMIN"
+    },
+    {
+        "name": {
+            "first": "Samy",
+            "last": "C"
+        },
+        "phone_no": "9674950307",
+        "password": "mypassword",
+        "role": "ADMIN"
+    },
+    {
+        "name": {
+            "first": "Vyshnavi",
+            "last": "KS"
+        },
+        "phone_no": "6309514814",
+        "password": "mypassword",
+        "role": "ADMIN"
+    },
+    {
+        "name": {
+            "first": "Tabish",
+            "last": "KH"
+        },
+        "phone_no": "8789594839",
+        "password": "mypassword",
+        "role": "ADMIN"
+    },
+    {
+        "name": {
             "first": "John 1",
             "last": "Doe 1"
         },
