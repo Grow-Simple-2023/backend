@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from config.db_config import db
+from models.model import RouteEndModel
 
 
 router = APIRouter()

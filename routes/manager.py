@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from config.db_config import db
 from datetime import datetime
 import json
-from models.model import DistributeModel, RouteEndModel
+from models.model import DistributeModel
 from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
 from time import time
