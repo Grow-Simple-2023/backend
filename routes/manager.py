@@ -85,7 +85,6 @@ async def distribute_items(distribution_info: DistributeModel):
     cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol)
     distribution = cluster.distribute()
     
-    print(distribution)
     
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
