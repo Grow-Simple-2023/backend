@@ -240,7 +240,9 @@ class TSP:
             rev_node_translation_dict[node] = index
         
         file_name = str(randint(1, 1000000))
-        
+        if not os.path.exists("./services/temp_files"):
+            os.makedirs("./services/temp_files")
+        print("The new directory is created!")
         with open(f"./services/temp_files/{file_name}.txt", "w+") as file:
             odd_length = len(odd_edged_nodes)
             file.write(f'{odd_length}\n')
