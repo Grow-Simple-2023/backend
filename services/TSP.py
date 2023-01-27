@@ -1,10 +1,25 @@
 import os
 import sys
+import math
 from random import randint
 import copy
 import subprocess
 from time import time
 from typing import List, Tuple, Set
+from services.Clustering import distance
+
+def road_distance(origin, destination)->float:
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    radius = 6371  # km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2) * math.sin(dlat / 2) +
+        math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+        math.sin(dlon / 2) * math.sin(dlon / 2))
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    d = radius * c
+    return d
 
 class TSP:
     
@@ -12,11 +27,20 @@ class TSP:
     graph: List[List[float]]
     node_weight: List[float]
 
-    def __init__(self, graph: List[List[float]], node_weight: List[float]) -> None:
-        self.graph = graph
-        self.node_weight = node_weight
-        self.N = len(graph)
+    def __init__(self, item_lat_long: List[Tuple[float]]) -> None:
+        self.graph = self.generate_graph(item_lat_long)
+        # self.node_weight = node_weight
+        self.N = len(self.graph)
         if(self.N==0): raise ValueError("Graph Must Have Atleast One Node")
+    
+    def generate_graph(self, item_lat_long: List[Tuple[float]]) -> List[List[float]]:
+        n = len(item_lat_long)
+        graph = [[0 for _ in range(n)] for _ in range(n)]
+        for i in range(n-1):
+            for j in range(i+1, n):
+                graph[i][j] = road_distance(item_lat_long[i], item_lat_long[j])
+                graph[j][i] = graph[i][j]
+        return graph
     
     def get_path_cost(self, path: List[int]) -> float:
         cost = 0
@@ -230,7 +254,9 @@ class TSP:
             rev_node_translation_dict[node] = index
         
         file_name = str(randint(1, 1000000))
-        
+        if not os.path.exists("./services/temp_files"):
+            os.makedirs("./services/temp_files")
+
         with open(f"./services/temp_files/{file_name}.txt", "w+") as file:
             odd_length = len(odd_edged_nodes)
             file.write(f'{odd_length}\n')
@@ -266,3 +292,20 @@ class TSP:
         if verbose: print("1.5 Approximation:", path_cost, f"({delta} sec)")
         return path, path_cost, delta
     
+    def node_edge_insert(self, iterations: int, path: List[int], verbose: bool = False) -> List[float]:
+        time_start = time()
+        for _ in range(iterations):
+            for i in range(len(path)):
+                temp_path = path[:]
+                node = path[i]
+                del temp_path[i]
+                for j in range(len(temp_path)):
+                    temp_path = temp_path[:]
+                    temp_path.insert(j, node)
+                    if self.get_path_cost(temp_path) < self.get_path_cost(path):
+                        path = temp_path[:]
+                    del temp_path[j]
+                    
+        path_cost = self.get_path_cost(path)
+        delta = time()-time_start
+        return path, path_cost, delta

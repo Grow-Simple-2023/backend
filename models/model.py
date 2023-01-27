@@ -1,9 +1,25 @@
-from enum import Enum
+from typing import List
 from pydantic import BaseModel
+from enum import Enum
+
+class DistributeModel(BaseModel):
+    item_ids: List[str]
+    rider_phone_nos: List[str]
+    
+class ItemStatusModel(BaseModel):
+    item_id: str
+    status: int
+    OTP: int
+    phone_no: str
+
+class RouteEndModel(BaseModel):
+    rider_phone_no: str
+    route_otp: int
 
 class Role(str, Enum):
     admin = "ADMIN"
     rider = "RIDER"
+    
 class Register(BaseModel):
     phone_no: str
     password: str
@@ -13,6 +29,7 @@ class Register(BaseModel):
     phone_no: str
     password: str
     role: Role
+    
 class Token(BaseModel):
     access_token: str
     token_type: str

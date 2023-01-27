@@ -10,7 +10,6 @@ user:
 
 item: 
 	id: ObjectID, 
-	user_id: ObjectID (from user id),
 	title: str, 
 	description {
 		length: float, 
@@ -25,12 +24,13 @@ item:
 	}, 
 	EDD: datetime, 
 	control {
-		is_fulfilled: bool, 
-		is_delivery: bool, 
-		is_pickup: bool, 
-		is_assigned: bool, 
+		is_fulfilled: bool, >> pickedup | delivered
+		is_delivery: bool,  >> going for delivery
+		is_pickup: bool, >> going for pickup
+		is_assigned: bool, >> rider assigned
 		is_cancelled: bool
-	}, 
+	},
+	delivered_on: datetime
 	OTP: int [same OTP for same (address, EDD)]
 
 route: 
@@ -49,4 +49,11 @@ route:
 	item_ids: List[ObjectID] (From Item id)
 	route_end_otp: int
 
-route_archive: ! Same as route but for routes that are completed !
+route_archive:
+	id: ObjectID
+	List[{
+		latitude: float, 
+		longitude: float,
+		time: long long int
+	}]
+	item_ids: List[ObjectID] (From Item id)
