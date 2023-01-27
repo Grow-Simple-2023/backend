@@ -13,13 +13,14 @@ router = APIRouter()
 
 
 @router.get("/")
-async def manager_home():
+async def manager_home(user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     return {"message": "Welcome to Grow-Simplee Manager API"}
 
 # to calculate on time delivery percentage
 @router.get("/OTD-percentage")
 async def on_time_delivery_percentage(user_data = Depends(decode_jwt)):
-    verify_role(user_data, ["MANAGER"])
+    check_role(user_data, ["ADMIN"])
     no_of_successful_deleveries = len(list(db.item.find({"EDD":{"$lte":str(datetime.now())},
                                                       "control.is_fulfilled":True,
                                                       "$expr":{"$lte":["$delivered_on","$EDD"]},
@@ -33,20 +34,23 @@ async def on_time_delivery_percentage(user_data = Depends(decode_jwt)):
 
 # items in delivery
 @router.get("/items-in-delivery")
-async def current_items_in_delivery():
+async def current_items_in_delivery(user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     items_in_delivery = list(db.item.find({"control.is_assigned":True,"control.is_fulfilled":False}, {"_id": 0}))
     return {"items_in_delivery": items_in_delivery} 
 
                                                 
 @router.get("/items/{item_id}")
-async def get_item(item_id: str):
+async def get_item(item_id: str,user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     item = db.item.find_one({"id": item_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail=f"Item not found: {item_id}")
     return item
 
 @router.get("/unassigned-items")
-async def unassigned_items():
+async def unassigned_items(user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     documents = list(db.item.find({"control.is_fulfilled": False, 
                                    "control.is_assigned": False, 
                                    "control.is_cancelled": False}, {"_id": 0}))
@@ -55,12 +59,14 @@ async def unassigned_items():
 
 
 @router.get("/riders")
-async def get_rider():
+async def get_rider(user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     documents = list(db.user.find({"role": "RIDER"}, {"_id": 0}))
     return {"riders": documents}
 
 @router.get("/unassigned-riders")
-async def get_unassigned_rider():
+async def get_unassigned_rider(user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     a_riders = []
     assigned_riders = list(db.route.find({}, {"_id": 0}))
     for rider in assigned_riders: a_riders.append(rider["rider_id"])
@@ -68,14 +74,16 @@ async def get_unassigned_rider():
     return {"unassigned_riders": documents}
 
 @router.get("/riders/{rider_no}")
-async def get_rider(rider_no: str):
+async def get_rider(rider_no: str,user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     rider = db.user.find_one({"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
     if not rider:
         raise HTTPException(status_code=404, detail=f"Rider not found: {rider_no}")
     return rider
 
 @router.post("/distribute")
-async def distribute_items(distribution_info: DistributeModel):
+async def distribute_items(distribution_info: DistributeModel,user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     start = time()
     rider_vol = []
     hub_lat_long = db.item.find_one({"id": "Hub"})["location"]
@@ -173,7 +181,8 @@ async def distribute_items(distribution_info: DistributeModel):
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
 
 @router.delete("/delete-pickup/{item_id}")
-async def delete_pickup(item_id: str):
+async def delete_pickup(item_id: str,user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     item_info = db.item.find_one({"id": item_id, 
                                   "control.is_assigned": True, 
                                   "control.is_pickup": True}, {"_id": 0})
@@ -188,7 +197,8 @@ async def delete_pickup(item_id: str):
     return db.item.find_one({"id": item_id}, {"_id": 0})
 
 @router.put("/add-pickup/{item_id}")
-async def add_pickup(item_id: str):
+async def add_pickup(item_id: str,user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
     item_info = db.item.find_one({"id": item_id, 
                                   "control.is_fulfilled": True,
                                   "control.is_delivery": True,
