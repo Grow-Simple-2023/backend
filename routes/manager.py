@@ -61,6 +61,7 @@ async def get_rider(rider_no: str):
 async def distribute_items(distribution_info: DistributeModel):
     start = time()
     rider_vol = []
+    hub_location = tuple(db.item.find_one({"id": "Hub"})["location"].values())
     for phone_no in distribution_info.rider_phone_nos:
         try:
             assert db.user.find_one({"phone_no": phone_no, "role": "RIDER"})
@@ -83,11 +84,14 @@ async def distribute_items(distribution_info: DistributeModel):
     
     cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol)
     distribution = cluster.distribute()
+    for i in range(len(distribution)):
+        for j in range(len(distribution[i])):
+            distribution[i][j]+=1
     all_routes = []
     total_cost = 0
     for cluster in distribution:
-        temp_lat_long = []
-        for id in cluster: temp_lat_long.append(item_lat_long[id])
+        temp_lat_long = [hub_location]
+        for id in cluster: temp_lat_long.append(item_lat_long[id-1])
         tsp = TSP(temp_lat_long)
         temp_path, temp_path_cost, _ = tsp.approximation_1_5()
         for i in range(3):
@@ -98,7 +102,15 @@ async def distribute_items(distribution_info: DistributeModel):
         # temp_path, temp_path_cost, _ = tsp.perfect()
         total_cost += temp_path_cost
         path = []
-        for node in temp_path: path.append(cluster[node])
+        for node in temp_path: 
+            if node==0: path.append(-1)
+            else: path.append(cluster[node-1]-1)
+        index_of_hub = path.index(-1)
+        path = path[index_of_hub:]+path[:index_of_hub]
         all_routes.append(path[:])
-        
+    
+    for i in range(len(distribution)):
+        for j in range(len(distribution[i])):
+            distribution[i][j]-=1
+                
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
