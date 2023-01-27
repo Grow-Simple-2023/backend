@@ -48,3 +48,7 @@ async def get_users(load: str = Depends(decode_jwt)):
         del user["_id"]
         users.append(user)
     return users
+
+@router.get("/decode-token")
+async def decode_token(load: str = Depends(decode_jwt)):
+    return load
