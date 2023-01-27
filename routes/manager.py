@@ -19,7 +19,7 @@ async def manager_home():
 # to calculate on time delivery percentage
 @router.get("/OTD-percentage")
 async def on_time_delivery_percentage(user_data = Depends(decode_jwt)):
-    verify_role(user_data, ["MANAGER"])
+    check_role(user_data, ["ADMIN"])
     no_of_successful_deleveries = len(list(db.item.find({"EDD":{"$lte":str(datetime.now())},
                                                       "control.is_fulfilled":True,
                                                       "$expr":{"$lte":["$delivered_on","$EDD"]},
