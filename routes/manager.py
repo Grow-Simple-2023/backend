@@ -6,6 +6,7 @@ from models.model import DistributeModel
 from services.Clustering import Clustering
 from services.TSP import TSP
 from time import time
+import random
 
 router = APIRouter()
 
@@ -52,6 +53,14 @@ async def unassigned_items():
 async def get_rider():
     documents = list(db.user.find({"role": "RIDER"}, {"_id": 0}))
     return {"riders": documents}
+
+@router.get("/unassigned-riders")
+async def get_unassigned_rider():
+    a_riders = []
+    assigned_riders = list(db.route.find({}, {"_id": 0}))
+    
+    documents = list(db.user.find({"role": "RIDER", "control.is_assigned": False}, {"_id": 0}))
+    return {"unassigned_riders": documents}
 
 @router.get("/riders/{rider_no}")
 async def get_rider(rider_no: str):
@@ -114,5 +123,40 @@ async def distribute_items(distribution_info: DistributeModel):
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
             distribution[i][j]-=1
-                
+    
+    global_data_info = []
+    documents = []
+    for index, route in enumerate(all_routes):
+        data = {
+            "rider_id": distribution_info.rider_phone_nos[index],
+            "item_info": []
+        }
+        for node in route:
+            item_id = ""
+            if node!=-1: item_id = item_id = distribution_info.item_ids[node]
+            else: item_id = "Hub"
+            data['item_info'].append(db.item.find_one({"id": item_id}, {"_id": 0}))
+            # db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True}})
+        
+        data['item_info'].append(db.item.find_one({"id": "Hub"}, {"_id": 0}))
+        document = {
+            "rider_id": distribution_info.rider_phone_nos[index],
+            "rider_location": [],
+            "bag_description": {
+                "length": 400000**(1/3),
+                "breadth": 400000**(1/3),
+                "height": 400000**(1/3)
+            },
+            "items_in_order": data['item_info'],
+            "route_otp": random.randint(10000, 99999),
+        }
+        global_data_info.append(data)
+        documents.append(document)
+        
+    # db.route.insert_many(documents)
+    # return global_data_info
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
+
+@router.get("/route/{phone_no}")
+def get_route_by_number(phone_no: str):
+    return db.route.find_one({"rider_id": phone_no}, {"_id": 0})
