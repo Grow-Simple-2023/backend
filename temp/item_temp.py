@@ -26,12 +26,13 @@ for i in range(1000):
     edd = datetime.now()+timedelta(days=random.randint(-3,3))
     item["EDD"] = str(edd)
     ful = random.choice([True,False])
+    is_del = random.choice([True,False])
     control = {
         "is_fulfilled": ful,
-		"is_delivery": random.choice([True,False]),
-		"is_pickup": random.choice([True,False]),
-		"is_assigned":random.choice([True,False]), 
-		"is_cancelled": random.choice([True,False]),
+		"is_delivery": is_del,
+		"is_pickup": random.choice([False, not is_del]),
+		"is_assigned":False,
+		"is_cancelled": False
     }
     item["control"] = control
     item["OTP"] = random.randint(10000,99999)
