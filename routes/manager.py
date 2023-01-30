@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
-from config.db_config import db
-from datetime import datetime
 import json
+import random
+import multiprocessing
+from services.auth import *
+from time import time, sleep
+from datetime import datetime
+from config.db_config import db
+from services.multiprocess import *
 from models.model import DistributeModel
 from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
-from time import time, sleep
-import random
-from services.auth import *
+from fastapi import APIRouter, HTTPException, Request, Depends
 
 router = APIRouter()
 
@@ -16,6 +18,17 @@ router = APIRouter()
 async def manager_home(user_data = Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     return {"message": "Welcome to Grow-Simplee Manager API"}
+
+
+@router.get("/users")
+async def get_users(load: str = Depends(decode_jwt)):
+    check_role(load, ["ADMIN"])
+    users = []
+    for user in db.user.find():
+        del user["_id"]
+        users.append(user)
+    return users
+
 
 # to calculate on time delivery percentage
 @router.get("/OTD-percentage")
@@ -54,7 +67,6 @@ async def unassigned_items(user_data = Depends(decode_jwt)):
     documents = list(db.item.find({"control.is_fulfilled": False, 
                                    "control.is_assigned": False, 
                                    "control.is_cancelled": False}, {"_id": 0}))
-    print(documents)
     return {"unassigned_items": documents}
 
 
@@ -112,38 +124,57 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
     cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol, EDD)
     distribution = cluster.distribute()
     
-    print(distribution)
     
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
             distribution[i][j]+=1
-    all_routes = []
-    total_cost = 0
+            
+            
+    manager = multiprocessing.Manager()
+    return_dict = manager.dict()
+    return_list = manager.list()
+    return_dict["total_cost"] = 0
+    return_dict["all_routes"] = []
+    processes = []
+    
     for cluster in distribution:
-        temp_lat_long = [hub_location]
-        for id in cluster: temp_lat_long.append(item_lat_long[id-1])
-        tsp = TSP(temp_lat_long)
-        temp_path, temp_path_cost, _ = tsp.approximation_1_5()
-        for i in range(3):
-            temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
-            temp_path, temp_path_cost, _ = tsp.three_edge_switch(2, temp_path)
-            temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
-        temp_path, temp_path_cost, _ = tsp.node_edge_insert(2, temp_path) 
-        # temp_path, temp_path_cost, _ = tsp.perfect()
-        total_cost += temp_path_cost
-        path = []
-        for node in temp_path: 
-            if node==0: path.append(-1)
-            else: path.append(cluster[node-1]-1)
-        index_of_hub = path.index(-1)
-        path = path[index_of_hub:]+path[:index_of_hub]
-        all_routes.append(path[:])
+        process = multiprocessing.Process(target=tsp_calculation, 
+                                          args=(cluster, hub_location, item_lat_long, return_dict, return_list))
+        processes.append(process)
+        process.start()
+        
+    for process in processes:
+        process.join()
+    
+    all_routes = list(return_list)
+    total_cost = return_dict["total_cost"]
+
+
+        
+    # for cluster in distribution:
+    #     temp_lat_long = [hub_location]
+    #     for id in cluster: temp_lat_long.append(item_lat_long[id-1])
+    #     tsp = TSP(temp_lat_long)
+    #     temp_path, temp_path_cost, _ = tsp.approximation_1_5()
+    #     for i in range(2):
+    #         temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
+    #         temp_path, temp_path_cost, _ = tsp.three_edge_switch(2, temp_path)
+    #         temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
+    #         temp_path, temp_path_cost, _ = tsp.node_edge_insert(2, temp_path) 
+    #     # temp_path, temp_path_cost, _ = tsp.perfect()
+    #     total_cost += temp_path_cost
+    #     path = []
+    #     for node in temp_path: 
+    #         if node==0: path.append(-1)
+    #         else: path.append(cluster[node-1]-1)
+    #     index_of_hub = path.index(-1)
+    #     path = path[index_of_hub:]+path[:index_of_hub]
+    #     all_routes.append(path[:])
     
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
             distribution[i][j]-=1
     
-    print(all_routes)
     
     global_data_info = []
     documents = []
@@ -156,9 +187,9 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
             item_id = ""
             if node!=-1: item_id = item_id = distribution_info.item_ids[node]
             else: item_id = "Hub"
-            db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
-                                                          "control.is_fulfilled": False,
-                                                          "control.is_cancelled": False}})
+            # db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
+            #                                               "control.is_fulfilled": False,
+            #                                               "control.is_cancelled": False}})
             data['item_info'].append(db.item.find_one({"id": item_id}, {"_id": 0}))
         
         data['item_info'].append(db.item.find_one({"id": "Hub"}, {"_id": 0}))
@@ -175,8 +206,8 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
         }
         global_data_info.append(data)
         documents.append(document)
-        
-    db.route.insert_many(documents)
+
+    # db.route.insert_many(documents)
     # return global_data_info
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
 

@@ -81,7 +81,6 @@ def decode_jwt(request: Request):
 
 def check_role(load, roles):
     try:
-        print(load)
         assert load["role"] in roles
     except Exception as e:
         print(e)

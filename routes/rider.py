@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
-from config.db_config import db
-from models.model import ItemStatusModel, RouteEndModel
-from datetime import datetime
 from services.auth import *
+from datetime import datetime
+from config.db_config import db
+from fastapi import APIRouter, HTTPException, Depends
+from models.model import ItemStatusModel, RouteEndModel
 
 
 router = APIRouter()
