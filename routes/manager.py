@@ -148,28 +148,6 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
     
     all_routes = list(return_list)
     total_cost = return_dict["total_cost"]
-
-
-        
-    # for cluster in distribution:
-    #     temp_lat_long = [hub_location]
-    #     for id in cluster: temp_lat_long.append(item_lat_long[id-1])
-    #     tsp = TSP(temp_lat_long)
-    #     temp_path, temp_path_cost, _ = tsp.approximation_1_5()
-    #     for i in range(2):
-    #         temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
-    #         temp_path, temp_path_cost, _ = tsp.three_edge_switch(2, temp_path)
-    #         temp_path, temp_path_cost, _ = tsp.two_edge_switch(2, temp_path)
-    #         temp_path, temp_path_cost, _ = tsp.node_edge_insert(2, temp_path) 
-    #     # temp_path, temp_path_cost, _ = tsp.perfect()
-    #     total_cost += temp_path_cost
-    #     path = []
-    #     for node in temp_path: 
-    #         if node==0: path.append(-1)
-    #         else: path.append(cluster[node-1]-1)
-    #     index_of_hub = path.index(-1)
-    #     path = path[index_of_hub:]+path[:index_of_hub]
-    #     all_routes.append(path[:])
     
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
@@ -187,9 +165,9 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
             item_id = ""
             if node!=-1: item_id = item_id = distribution_info.item_ids[node]
             else: item_id = "Hub"
-            # db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
-            #                                               "control.is_fulfilled": False,
-            #                                               "control.is_cancelled": False}})
+            db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
+                                                          "control.is_fulfilled": False,
+                                                          "control.is_cancelled": False}})
             data['item_info'].append(db.item.find_one({"id": item_id}, {"_id": 0}))
         
         data['item_info'].append(db.item.find_one({"id": "Hub"}, {"_id": 0}))
@@ -207,8 +185,7 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
         global_data_info.append(data)
         documents.append(document)
 
-    # db.route.insert_many(documents)
-    # return global_data_info
+    db.route.insert_many(documents)
     return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
 
 @router.delete("/delete-pickup/{item_id}")
