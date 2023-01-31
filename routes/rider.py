@@ -65,7 +65,7 @@ async def end_route(route_end_model: RouteEndModel, user_data = Depends(decode_j
     return {"deleted_route": route_info}
 
 @router.put("/modify-route")
-async def modify_route(rider_id: str, item_ids_in_order: List[str], user_data = Depends(decode_jwt(request))):
+async def modify_route(rider_id: str, item_ids_in_order: List[str], user_data = Depends(decode_jwt)):
     check_role(user_data, ["ADMIN", "RIDER"])
     if(role=="RIDER"):
         if(rider_id != user_data["phone_no"]):
