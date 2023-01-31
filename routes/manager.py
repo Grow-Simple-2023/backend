@@ -59,7 +59,7 @@ async def get_item(item_id: str,user_data = Depends(decode_jwt)):
     item = db.item.find_one({"id": item_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail=f"Item not found: {item_id}")
-    return item
+    return {"item": item}
 
 @router.get("/unassigned-items")
 async def unassigned_items(user_data = Depends(decode_jwt)):
@@ -91,7 +91,7 @@ async def get_rider(rider_no: str,user_data = Depends(decode_jwt)):
     rider = db.user.find_one({"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
     if not rider:
         raise HTTPException(status_code=404, detail=f"Rider not found: {rider_no}")
-    return rider
+    return {"rider": rider}
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel,user_data = Depends(decode_jwt)):
@@ -202,7 +202,7 @@ async def delete_pickup(item_id: str,user_data = Depends(decode_jwt)):
                                                     "control.is_fulfilled": True,
                                                     "conrtol.is_cancelled": False,
                                                     "control.is_delivery": True}})
-    return db.item.find_one({"id": item_id}, {"_id": 0})
+    return {"removed_pickup": db.item.find_one({"id": item_id}, {"_id": 0})}
 
 @router.put("/add-pickup/{item_id}")
 async def add_pickup(item_id: str,user_data = Depends(decode_jwt)):
@@ -265,6 +265,6 @@ async def add_pickup(item_id: str,user_data = Depends(decode_jwt)):
                         "rider_id": min_cost_index_volume_bag[4]}
     
     db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False}})
-    return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}), 
+    return {"added_pickup": db.item.find_one({"id": item_id}, {"_id": 0}), 
             "is_assigned": False}
 
