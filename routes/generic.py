@@ -44,7 +44,8 @@ async def login(login: Login):
                             detail="Provide correct phone number")
     user = verify_credentials(phone_no=login.phone_no, password=login.password)
     token = create_token(phone_no=user["phone_no"], role=user["role"])
-    return {"token": token, "role": user["role"]}
+    token['role'] = user['role']
+    return token
 
 
 @router.get("/decode-token")
