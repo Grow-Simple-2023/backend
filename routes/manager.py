@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.get("/")
-async def manager_home(user_data = Depends(decode_jwt)):
+async def manager_home(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     return {"message": "Welcome to Grow-Simplee Manager API"}
 
@@ -32,69 +32,82 @@ async def get_users(load: str = Depends(decode_jwt)):
 
 # to calculate on time delivery percentage
 @router.get("/OTD-percentage")
-async def on_time_delivery_percentage(user_data = Depends(decode_jwt)):
+async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    no_of_successful_deleveries = len(list(db.item.find({"EDD":{"$lte":str(datetime.now())},
-                                                      "control.is_fulfilled":True,
-                                                      "$expr":{"$lte":["$delivered_on","$EDD"]},
-                                                      "control.is_cancelled": False})))
-    
-    total_deliveries_to_be_done = len(list(db.item.find({"EDD":{"$lte":str(datetime.now())}, 
+    no_of_successful_deleveries = len(list(db.item.find({"EDD": {"$lte": str(datetime.now())},
+                                                         "control.is_fulfilled": True,
+                                                         "$expr": {"$lte": ["$delivered_on", "$EDD"]},
                                                          "control.is_cancelled": False})))
 
-    percentage_of_successful_deliveries = (no_of_successful_deleveries/total_deliveries_to_be_done)*100
+    total_deliveries_to_be_done = len(list(db.item.find({"EDD": {"$lte": str(datetime.now())},
+                                                         "control.is_cancelled": False})))
+
+    percentage_of_successful_deliveries = (
+        no_of_successful_deleveries/total_deliveries_to_be_done)*100
     return {"percentage": percentage_of_successful_deliveries}
 
 # items in delivery
-@router.get("/items-in-delivery")
-async def current_items_in_delivery(user_data = Depends(decode_jwt)):
-    check_role(user_data, ["ADMIN"])
-    items_in_delivery = list(db.item.find({"control.is_assigned":True,"control.is_fulfilled":False}, {"_id": 0}))
-    return {"items_in_delivery": items_in_delivery} 
 
-                                                
+
+@router.get("/items-in-delivery")
+async def current_items_in_delivery(user_data=Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
+    items_in_delivery = list(db.item.find(
+        {"control.is_assigned": True, "control.is_fulfilled": False}, {"_id": 0}))
+    return {"items_in_delivery": items_in_delivery}
+
+
 @router.get("/items/{item_id}")
-async def get_item(item_id: str,user_data = Depends(decode_jwt)):
+async def get_item(item_id: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     item = db.item.find_one({"id": item_id}, {"_id": 0})
     if not item:
-        raise HTTPException(status_code=404, detail=f"Item not found: {item_id}")
+        raise HTTPException(
+            status_code=404, detail=f"Item not found: {item_id}")
     return {"item": item}
 
+
 @router.get("/unassigned-items")
-async def unassigned_items(user_data = Depends(decode_jwt)):
+async def unassigned_items(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    documents = list(db.item.find({"control.is_fulfilled": False, 
-                                   "control.is_assigned": False, 
+    documents = list(db.item.find({"control.is_fulfilled": False,
+                                   "control.is_assigned": False,
                                    "control.is_cancelled": False}, {"_id": 0}))
     return {"unassigned_items": documents}
 
 
 @router.get("/riders")
-async def get_rider(user_data = Depends(decode_jwt)):
+async def get_rider(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     documents = list(db.user.find({"role": "RIDER"}, {"_id": 0}))
     return {"riders": documents}
 
+
 @router.get("/unassigned-riders")
-async def get_unassigned_rider(user_data = Depends(decode_jwt)):
+async def get_unassigned_rider(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     a_riders = []
     assigned_riders = list(db.route.find({}, {"_id": 0}))
-    for rider in assigned_riders: a_riders.append(rider["rider_id"])
-    documents = list(db.user.find({"phone_no": {"$nin": assigned_riders}, "role":"RIDER"}, {"_id": 0}))
+    for rider in assigned_riders:
+        a_riders.append(rider["rider_id"])
+    documents = list(db.user.find(
+        {"phone_no": {"$nin": assigned_riders}, "role": "RIDER"}, {"_id": 0}))
     return {"unassigned_riders": documents}
 
+
 @router.get("/riders/{rider_no}")
-async def get_rider(rider_no: str,user_data = Depends(decode_jwt)):
+async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    rider = db.user.find_one({"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
+    rider = db.user.find_one(
+        {"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
     if not rider:
-        raise HTTPException(status_code=404, detail=f"Rider not found: {rider_no}")
+        raise HTTPException(
+            status_code=404, detail=f"Rider not found: {rider_no}")
     return {"rider": rider}
 
+
 @router.post("/distribute")
-async def distribute_items(distribution_info: DistributeModel,user_data = Depends(decode_jwt)):
+async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     start = time()
     rider_vol = []
@@ -105,13 +118,14 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
             assert db.user.find_one({"phone_no": phone_no, "role": "RIDER"})
             rider_vol.append(400000)
         except:
-            raise HTTPException(status_code=404, detail=f"Phone number does not belong to a rider: {phone_no}")
-    
+            raise HTTPException(
+                status_code=404, detail=f"Phone number does not belong to a rider: {phone_no}")
+
     no_riders = len(distribution_info.rider_phone_nos)
     item_dims, item_lat_long, EDD = [], [], []
     for item_id in distribution_info.item_ids:
         try:
-            item_info = db.item.find_one({"id": item_id, "control.is_assigned": False, 
+            item_info = db.item.find_one({"id": item_id, "control.is_assigned": False,
                                           "control.is_fulfilled": False,
                                           "control.is_cancelled": False}, {"description.weight": 0})
             assert item_info
@@ -119,41 +133,39 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
             item_lat_long.append(tuple(item_info["location"].values()))
             EDD.append(item_info["EDD"])
         except Exception as E:
-            raise HTTPException(status_code=404, detail=f"Item does not exist or is already assigned: {item_id}")
-    
+            raise HTTPException(
+                status_code=404, detail=f"Item does not exist or is already assigned: {item_id}")
+
     cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol, EDD)
     distribution = cluster.distribute()
-    
-    
+
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
-            distribution[i][j]+=1
-            
-            
+            distribution[i][j] += 1
+
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     return_list = manager.list()
     return_dict["total_cost"] = 0
     return_dict["all_routes"] = []
     processes = []
-    
+
     for cluster in distribution:
-        process = multiprocessing.Process(target=tsp_calculation, 
+        process = multiprocessing.Process(target=tsp_calculation,
                                           args=(cluster, hub_location, item_lat_long, return_dict, return_list))
         processes.append(process)
         process.start()
-        
+
     for process in processes:
         process.join()
-    
+
     all_routes = list(return_list)
     total_cost = return_dict["total_cost"]
-    
+
     for i in range(len(distribution)):
         for j in range(len(distribution[i])):
-            distribution[i][j]-=1
-    
-    
+            distribution[i][j] -= 1
+
     global_data_info = []
     documents = []
     for index, route in enumerate(all_routes):
@@ -163,13 +175,16 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
         }
         for node in route:
             item_id = ""
-            if node!=-1: item_id = item_id = distribution_info.item_ids[node]
-            else: item_id = "Hub"
+            if node != -1:
+                item_id = item_id = distribution_info.item_ids[node]
+            else:
+                item_id = "Hub"
             db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
                                                           "control.is_fulfilled": False,
                                                           "control.is_cancelled": False}})
-            data['item_info'].append(db.item.find_one({"id": item_id}, {"_id": 0}))
-        
+            data['item_info'].append(
+                db.item.find_one({"id": item_id}, {"_id": 0}))
+
         data['item_info'].append(db.item.find_one({"id": "Hub"}, {"_id": 0}))
         document = {
             "rider_id": distribution_info.rider_phone_nos[index],
@@ -181,41 +196,49 @@ async def distribute_items(distribution_info: DistributeModel,user_data = Depend
             },
             "items_in_order": data['item_info'],
             "route_otp": random.randint(10000, 99999),
+            "last_modified": str(datetime.now()),
         }
         global_data_info.append(data)
         documents.append(document)
 
     db.route.insert_many(documents)
-    return {"distribution": distribution, "routes": all_routes, "time_taken": time()-start, "total_cost": total_cost}
+    return {"routes": documents, "time_taken": time()-start, "total_cost": total_cost}
+
 
 @router.delete("/delete-pickup/{item_id}")
-async def delete_pickup(item_id: str,user_data = Depends(decode_jwt)):
+async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    item_info = db.item.find_one({"id": item_id, 
-                                  "control.is_assigned": True, 
+    item_info = db.item.find_one({"id": item_id,
+                                  "control.is_assigned": True,
                                   "control.is_pickup": True}, {"_id": 0})
-    if not item_info: 
-        raise HTTPException(status_code=404, detail=f"Item does not exist or is not a pickup: {item_id}")
-    route_info = db.route.update_one({"items_in_order.id": item_id}, {"$pull": {"items_in_order": {"id": item_id}}})
+    if not item_info:
+        raise HTTPException(
+            status_code=404, detail=f"Item does not exist or is not a pickup: {item_id}")
+    route_info = db.route.update_one({"items_in_order.id": item_id}, {
+                                     "$pull": {"items_in_order": {"id": item_id}}})
     db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False,
-                                                    "control.is_pickup": False,
-                                                    "control.is_fulfilled": True,
-                                                    "conrtol.is_cancelled": False,
-                                                    "control.is_delivery": True}})
+                                                  "control.is_pickup": False,
+                                                  "control.is_fulfilled": True,
+                                                  "conrtol.is_cancelled": False,
+                                                  "control.is_delivery": True}})
+    db.route.update_one({"rider_id": route_info["rider_id"]}, {
+                        "$set": {"last_modified": str(datetime.now())}})
     return {"removed_pickup": db.item.find_one({"id": item_id}, {"_id": 0})}
 
+
 @router.put("/add-pickup/{item_id}")
-async def add_pickup(item_id: str,user_data = Depends(decode_jwt)):
+async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    item_info = db.item.find_one({"id": item_id, 
+    item_info = db.item.find_one({"id": item_id,
                                   "control.is_fulfilled": True,
                                   "control.is_delivery": True,
                                   "control.is_pickup": False,
-                                  "control.is_assigned": False, 
+                                  "control.is_assigned": False,
                                   "control.is_cancelled": False}, {"_id": 0})
     if not item_info:
-        raise HTTPException(status_code=404, detail=f"Item is cancelled, assigned or fulfilled: {item_id}")
-    
+        raise HTTPException(
+            status_code=404, detail=f"Item is cancelled, assigned or fulfilled: {item_id}")
+
     item_lat_long = tuple(item_info["location"].values())
     all_routes = list(db.route.find({}))
     min_cost_index_volume_bags = []
@@ -230,41 +253,50 @@ async def add_pickup(item_id: str,user_data = Depends(decode_jwt)):
             "rider_id": route["rider_id"]
         }
         for i in range(len(route["items_in_order"])):
-            if route["items_in_order"][i]["id"]!="Hub":
-                temp_item_dims = tuple(route["items_in_order"][i]["description"].values())
+            if route["items_in_order"][i]["id"] != "Hub":
+                temp_item_dims = tuple(
+                    route["items_in_order"][i]["description"].values())
             else:
                 temp_item_dims = (0, 0, 0, 0)
-            cost_index_volume_bag["volume"] += temp_item_dims[0]*temp_item_dims[1]*temp_item_dims[2]
-            if cost_index_volume_bag["volume"] > cost_index_volume_bag["bag"]: break
-            
-            a = tuple(route['rider_location'][-1].values()) if i==0 else tuple(route["items_in_order"][i-1]["location"].values())
+            cost_index_volume_bag["volume"] += temp_item_dims[0] * \
+                temp_item_dims[1]*temp_item_dims[2]
+            if cost_index_volume_bag["volume"] > cost_index_volume_bag["bag"]:
+                break
+
+            a = tuple(route['rider_location'][-1].values()) if i == 0 else tuple(
+                route["items_in_order"][i-1]["location"].values())
             b = tuple(route["items_in_order"][i]["location"].values())
-            if road_distance(a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)<cost_index_volume_bag["cost"]:
-                cost_index_volume_bag["cost"] = road_distance(a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)
+            if road_distance(a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b) < cost_index_volume_bag["cost"]:
+                cost_index_volume_bag["cost"] = road_distance(
+                    a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)
                 cost_index_volume_bag["index"] = i
-        
+
         min_cost_index_volume_bags.append(list(cost_index_volume_bag.values()))
-    
+
     min_cost_index_volume_bags.sort(key=lambda x: x[2])
     db.item.update_one({"id": item_id}, {"$set": {"control.is_pickup": True,
-                                                    "control.is_fulfilled": False,
-                                                    "conrtol.is_cancelled": False,
-                                                    "control.is_delivery": False}})
-    
+                                                  "control.is_fulfilled": False,
+                                                  "conrtol.is_cancelled": False,
+                                                  "control.is_delivery": False}})
+
     for index, min_cost_index_volume_bag in enumerate(min_cost_index_volume_bags):
-        if index>3: break
+        if index > 3:
+            break
         if min_cost_index_volume_bag[3]:
-            if min_cost_index_volume_bag[1]<min_cost_index_volume_bag[0]:
-                db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True}})
-                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]}, 
+            if min_cost_index_volume_bag[1] < min_cost_index_volume_bag[0]:
+                db.item.update_one({"id": item_id}, {
+                                   "$set": {"control.is_assigned": True}})
+                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]},
                                     {"$push": {"items_in_order": {"$each": [db.item.find_one({"id": item_id}, {"_id": 0})],
                                                "$position": min_cost_index_volume_bag[3]}}})
-                return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}), 
-                        "is_assigned": True, 
-                        "index": min_cost_index_volume_bag[3], 
+                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]}, {
+                                    "$set": {"last_updated": str(datetime.now())}})
+                return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}),
+                        "is_assigned": True,
+                        "index": min_cost_index_volume_bag[3],
                         "rider_id": min_cost_index_volume_bag[4]}
-    
-    db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False}})
-    return {"added_pickup": db.item.find_one({"id": item_id}, {"_id": 0}), 
-            "is_assigned": False}
 
+    db.item.update_one({"id": item_id}, {
+                       "$set": {"control.is_assigned": False}})
+    return {"added_pickup": db.item.find_one({"id": item_id}, {"_id": 0}),
+            "is_assigned": False}

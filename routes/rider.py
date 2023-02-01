@@ -42,6 +42,7 @@ async def item_status_update(item_status: ItemStatusModel, user_data = Depends(d
             db.item.update_one({"id": item_status.item_id}, {"$set": {"control.is_cancelled": True,"control.is_fulfilled": False,"control.is_pickup": False,"control.is_assigned":False,"control.is_delivery":False}})
             db.route.update_one({"rider_id": user_data.phone_no}, {"$pull": {"items_in_order": 
                                                                                {"id": item_status.item_id}}})
+            db.route.update_one({"rider_id": user_data.phone_no}, {"$set": {"last_modified": str(datetime.now())}})
             item = db.item.find_one({"id": item_status.item_id}, {"_id": 0})
             return {"updated_item": item}
         else:
@@ -85,4 +86,18 @@ async def modify_route(rider_id: str, item_ids_in_order: List[str], user_data = 
         raise HTTPException(status_code=404, detail=f"Invalid order: {rider_id}")
     db.route.update_one({"rider_id": rider_id}, {"$set": {"items_in_order": new_order}})
     return {"items_in_route": db.route.find_one({"rider_id": rider_id}, {"_id": 0})}
+
+@router.get("/is-route-modified-after/{route_id}")
+async def is_route_modified_after(rider_id: str, last_modified: str, user_data = Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN", "RIDER"])
+    if(role=="RIDER"):
+        if(rider_id != user_data["phone_no"]):
+            raise HTTPException(status_code=404, detail="You are not authorized to modify this route")
+    existing_route = db.route.find_one({"rider_id": rider_id}, {"_id": 0})
+    if not existing_route:
+        raise HTTPException(status_code=404, detail=f"Route not found: {rider_id}")
+    if existing_route["last_modified"] > last_modified:
+        return {"is_modified": True}
+    return {"is_modified": False}
+    
     
