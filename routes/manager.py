@@ -207,103 +207,104 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
         documents.append(document)
 
     db.route.insert_many(documents)
-    # db.item.update_many({"id": {"$in": item_ids}}, {"$set": {
-    #                     "control.is_assigned": True, "control.is_fulfilled": False, "control.is_cancelled": False}})
+    db.item.update_many({"id": {"$in": item_ids}}, {"$set": {
+                        "control.is_assigned": True, "control.is_fulfilled": False, "control.is_cancelled": False}})
     return {"routes": list(db.route.find({}, {"_id": 0})), "time_taken": time()-start, "total_cost": total_cost}
 
 
 @router.delete("/delete-pickup/{item_id}")
 async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    item_info = db.item.find_one({"id": item_id,
-                                  "control.is_assigned": True,
-                                  "control.is_pickup": True}, {"_id": 0})
-    if not item_info:
+
+    item_doc = db.item.find_one_and_update(
+        {"id": item_id,
+         "control.is_assigned": True,
+         "control.is_pickup": True},
+        {"$set": {
+            "control.is_assigned": False,
+            "control.is_pickup": False,
+            "control.is_fulfilled": True,
+            "control.is_cancelled": False,
+            "control.is_delivery": True
+        }},
+        return_document=ReturnDocument.AFTER,
+        projection={"_id": 0}
+    )
+    if not item_doc:
         raise HTTPException(
             status_code=404, detail=f"Item does not exist or is not a pickup: {item_id}")
-    route_info = db.route.update_one({"items_in_order.id": item_id}, {
-                                     "$pull": {"items_in_order": {"id": item_id}}})
-    db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": False,
-                                                  "control.is_pickup": False,
-                                                  "control.is_fulfilled": True,
-                                                  "conrtol.is_cancelled": False,
-                                                  "control.is_delivery": True}})
-    db.route.update_one({"rider_id": route_info["rider_id"]}, {
-                        "$set": {"last_modified": str(datetime.now())}})
-    return {"removed_pickup": db.item.find_one({"id": item_id}, {"_id": 0})}
+
+    route_doc = db.route.find_one_and_update(
+        {"items_in_order.id": item_id},
+        {"$pull": {"items_in_order": {"id": item_id}}},
+        return_document=ReturnDocument.AFTER,
+        projection={"_id": 0}
+    )
+    if not route_doc:
+        raise HTTPException(
+            status_code=404, detail=f"Route containing item {item_id} not found")
+
+    db.route.update_one(
+        {"rider_id": route_doc["rider_id"]},
+        {"$set": {"last_modified": str(datetime.now())}}
+    )
+
+    return {"removed_pickup": item_doc}
 
 
 @router.put("/add-pickup/{item_id}")
 async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    item_info = db.item.find_one({"id": item_id,
-                                  "control.is_fulfilled": True,
-                                  "control.is_delivery": True,
-                                  "control.is_pickup": False,
-                                  "control.is_assigned": False,
-                                  "control.is_cancelled": False}, {"_id": 0})
+
+    item_query = {
+        "id": item_id,
+        "control.is_fulfilled": True,
+        "control.is_delivery": True,
+        "control.is_pickup": False,
+        "control.is_assigned": False,
+        "control.is_cancelled": False
+    }
+
+    item_info = db.item.find_one(item_query, {"_id": 0})
     if not item_info:
         raise HTTPException(
             status_code=404, detail=f"Item is cancelled, assigned or fulfilled: {item_id}")
 
     item_lat_long = tuple(item_info["location"].values())
-    all_routes = list(db.route.find({}))
-    min_cost_index_volume_bags = []
     item_dims = tuple(item_info["description"].values())
+
+    route_query = {}
+
+    all_routes = list(db.route.find(route_query))
+    min_cost_index_volume_bags = []
+
     for route in all_routes:
         bag_dims = tuple(route["bag_description"].values())
         cost_index_volume_bag = {
-            "bag": bag_dims[0]*bag_dims[1]*bag_dims[2],
-            "volume": item_dims[0]*item_dims[1]*item_dims[2],
+            "bag": bag_dims[0] * bag_dims[1] * bag_dims[2],
+            "volume": item_dims[0] * item_dims[1] * item_dims[2],
             "cost": float('inf'),
             "index": None,
             "rider_id": route["rider_id"]
         }
+
         for i in range(len(route["items_in_order"])):
             if route["items_in_order"][i]["id"] != "Hub":
                 temp_item_dims = tuple(
                     route["items_in_order"][i]["description"].values())
             else:
                 temp_item_dims = (0, 0, 0, 0)
+
             cost_index_volume_bag["volume"] += temp_item_dims[0] * \
-                temp_item_dims[1]*temp_item_dims[2]
+                temp_item_dims[1] * temp_item_dims[2]
             if cost_index_volume_bag["volume"] > cost_index_volume_bag["bag"]:
                 break
 
             a = tuple(route['rider_location'][-1].values()) if i == 0 else tuple(
                 route["items_in_order"][i-1]["location"].values())
             b = tuple(route["items_in_order"][i]["location"].values())
+
             if road_distance(a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b) < cost_index_volume_bag["cost"]:
                 cost_index_volume_bag["cost"] = road_distance(
                     a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)
-                cost_index_volume_bag["index"] = i
-
-        min_cost_index_volume_bags.append(list(cost_index_volume_bag.values()))
-
-    min_cost_index_volume_bags.sort(key=lambda x: x[2])
-    db.item.update_one({"id": item_id}, {"$set": {"control.is_pickup": True,
-                                                  "control.is_fulfilled": False,
-                                                  "conrtol.is_cancelled": False,
-                                                  "control.is_delivery": False}})
-
-    for index, min_cost_index_volume_bag in enumerate(min_cost_index_volume_bags):
-        if index > 3:
-            break
-        if min_cost_index_volume_bag[3]:
-            if min_cost_index_volume_bag[1] < min_cost_index_volume_bag[0]:
-                db.item.update_one({"id": item_id}, {
-                                   "$set": {"control.is_assigned": True}})
-                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]},
-                                    {"$push": {"items_in_order": {"$each": [db.item.find_one({"id": item_id}, {"_id": 0})],
-                                               "$position": min_cost_index_volume_bag[3]}}})
-                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]}, {
-                                    "$set": {"last_updated": str(datetime.now())}})
-                return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}),
-                        "is_assigned": True,
-                        "index": min_cost_index_volume_bag[3],
-                        "rider_id": min_cost_index_volume_bag[4]}
-
-    db.item.update_one({"id": item_id}, {
-                       "$set": {"control.is_assigned": False}})
-    return {"added_pickup": db.item.find_one({"id": item_id}, {"_id": 0}),
-            "is_assigned": False}
+                cost_index_volume
