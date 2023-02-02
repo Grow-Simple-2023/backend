@@ -8,7 +8,7 @@ def tsp_calculation(cluster, hub_location, item_lat_long, return_dict, return_li
     tsp = TSP(temp_lat_long)
     no_of_nodes = len(temp_lat_long)
     temp_path, temp_path_cost = [], 0
-    if no_of_nodes > 12:
+    if no_of_nodes > 13:
         temp_path, temp_path_cost, _ = tsp.approximation_1_5()
         for i in range(4):
             temp_path, temp_path_cost, _ = tsp.two_edge_switch(1, temp_path)

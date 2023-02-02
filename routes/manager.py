@@ -34,13 +34,13 @@ async def get_users(load: str = Depends(decode_jwt)):
 @router.get("/OTD-percentage")
 async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    no_of_successful_deleveries = len(list(db.item.find({"EDD": {"$lte": str(datetime.now())},
+    no_of_successful_deleveries = db.item.count_documents({"EDD": {"$lte": str(datetime.now())},
                                                          "control.is_fulfilled": True,
                                                          "$expr": {"$lte": ["$delivered_on", "$EDD"]},
-                                                         "control.is_cancelled": False})))
+                                                         "control.is_cancelled": False})
 
-    total_deliveries_to_be_done = len(list(db.item.find({"EDD": {"$lte": str(datetime.now())},
-                                                         "control.is_cancelled": False})))
+    total_deliveries_to_be_done = db.item.count_documents({"EDD": {"$lte": str(datetime.now())},
+                                                         "control.is_cancelled": False})
 
     percentage_of_successful_deliveries = (
         no_of_successful_deleveries/total_deliveries_to_be_done)*100
@@ -108,7 +108,7 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
-    rider_volume = 15**3 * 30
+    rider_volume = 15**3 * 20
     check_role(user_data, ["ADMIN"])
     start = time()
     hub_lat_long = db.item.find_one({"id": "Hub"})["location"]
@@ -194,6 +194,7 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
         item_info = [item_info_dict[item_id] for item_id in item_ids]
         document = {
             "rider_id": rider_id,
+            "route_start": str(datetime.now()),
             "rider_location": [hub_lat_long],
             "bag_description": {
                 "length": rider_volume**(1/3),

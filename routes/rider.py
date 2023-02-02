@@ -56,6 +56,7 @@ async def end_route(route_end_model: RouteEndModel, user_data = Depends(decode_j
     phone_no = user_data["phone_no"]
     route_info = db.route.find_one({"rider_id": phone_no, 
                                     "route_otp": route_end_model.route_otp}, {"_id": 0})
+    
     if not route_info:
         raise HTTPException(status_code=404, detail=f"Wrong OTP / Item not Assigned: {phone_no}")
     db.route.delete_one({"rider_id": phone_no})
@@ -63,6 +64,8 @@ async def end_route(route_end_model: RouteEndModel, user_data = Depends(decode_j
         db.item.update_one({"id": item["id"]}, {"$set": {"control.is_assigned": False,
                                                         "control.is_fulfilled": False,
                                                         "conrtol.is_cancelled": False}})
+    route_info["route_end_time"] = str(datetime.now())
+    db.route_archive.insert_one(route_info)
     return {"deleted_route": route_info}
 
 @router.put("/modify-route")
