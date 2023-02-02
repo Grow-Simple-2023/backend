@@ -108,40 +108,59 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
+    rider_volume = 15**3 * 11
     check_role(user_data, ["ADMIN"])
     start = time()
-    rider_vol = []
     hub_lat_long = db.item.find_one({"id": "Hub"})["location"]
     hub_location = tuple(hub_lat_long.values())
-    for phone_no in distribution_info.rider_phone_nos:
-        try:
-            assert db.user.find_one({"phone_no": phone_no, "role": "RIDER"})
-            rider_vol.append(400000)
-        except:
-            raise HTTPException(
-                status_code=404, detail=f"Phone number does not belong to a rider: {phone_no}")
-
     no_riders = len(distribution_info.rider_phone_nos)
-    item_dims, item_lat_long, EDD = [], [], []
-    for item_id in distribution_info.item_ids:
-        try:
-            item_info = db.item.find_one({"id": item_id, "control.is_assigned": False,
-                                          "control.is_fulfilled": False,
-                                          "control.is_cancelled": False}, {"description.weight": 0})
-            assert item_info
-            item_dims.append(tuple(item_info["description"].values()))
-            item_lat_long.append(tuple(item_info["location"].values()))
-            EDD.append(item_info["EDD"])
-        except Exception as E:
-            raise HTTPException(
-                status_code=404, detail=f"Item does not exist or is already assigned: {item_id}")
 
+    matching_riders_count = db.user.count_documents(
+        {"phone_no": {"$in": distribution_info.rider_phone_nos}, "role": "RIDER"})
+
+    if matching_riders_count != no_riders:
+        raise HTTPException(
+            status_code=404, detail=f"One of the Phone numbers does not belong to a rider")
+
+    item_info = list(db.item.aggregate([
+        {"$match": {
+            "id": {"$in": distribution_info.item_ids},
+            "control.is_assigned": False,
+            "control.is_fulfilled": False,
+            "control.is_cancelled": False
+        }},
+        {"$project": {
+            "description": {
+                "height": "$description.height",
+                "breadth": "$description.breadth",
+                "length": "$description.length"
+            },
+            "location": {
+                "latitude": "$location.latitude",
+                "longitude": "$location.longitude"
+            },
+            "EDD": "$EDD"
+        }}
+    ]))
+
+    item_dims, item_lat_long, EDD = [], [], []
+
+    if len(item_info) != len(distribution_info.item_ids):
+        missing_item_ids = set(distribution_info.item_ids) - \
+            set(item["id"] for item in item_info)
+        raise HTTPException(
+            status_code=404, detail=f"Item does not exist or is already assigned: {missing_item_ids}")
+    else:
+        item_dims = [tuple(item["description"].values()) for item in item_info]
+        item_lat_long = [tuple(item["location"].values())
+                         for item in item_info]
+        EDD = [item["EDD"] for item in item_info]
+
+    rider_vol = [rider_volume for _ in range(no_riders)]
     cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol, EDD)
     distribution = cluster.distribute()
 
-    for i in range(len(distribution)):
-        for j in range(len(distribution[i])):
-            distribution[i][j] += 1
+    distribution = [[elem + 1 for elem in row] for row in distribution]
 
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
@@ -162,47 +181,34 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
     all_routes = list(return_list)
     total_cost = return_dict["total_cost"]
 
-    for i in range(len(distribution)):
-        for j in range(len(distribution[i])):
-            distribution[i][j] -= 1
+    distribution = [[elem - 1 for elem in row] for row in distribution]
 
-    global_data_info = []
     documents = []
     for index, route in enumerate(all_routes):
-        data = {
-            "rider_id": distribution_info.rider_phone_nos[index],
-            "item_info": []
-        }
-        for node in route:
-            item_id = ""
-            if node != -1:
-                item_id = item_id = distribution_info.item_ids[node]
-            else:
-                item_id = "Hub"
-            db.item.update_one({"id": item_id}, {"$set": {"control.is_assigned": True,
-                                                          "control.is_fulfilled": False,
-                                                          "control.is_cancelled": False}})
-            data['item_info'].append(
-                db.item.find_one({"id": item_id}, {"_id": 0}))
-
-        data['item_info'].append(db.item.find_one({"id": "Hub"}, {"_id": 0}))
+        rider_id = distribution_info.rider_phone_nos[index]
+        item_ids = [distribution_info.item_ids[node]
+                    if node != -1 else "Hub" for node in route]
+        item_docs = list(db.item.find(
+            {"id": {"$in": item_ids + ["Hub"]}}, {"_id": 0}))
+        item_info = [doc for doc in item_docs if doc["id"] in item_ids]
         document = {
-            "rider_id": distribution_info.rider_phone_nos[index],
+            "rider_id": rider_id,
             "rider_location": [hub_lat_long],
             "bag_description": {
-                "length": 400000**(1/3),
-                "breadth": 400000**(1/3),
-                "height": 400000**(1/3)
+                "length": rider_volume**(1/3),
+                "breadth": rider_volume**(1/3),
+                "height": rider_volume**(1/3)
             },
-            "items_in_order": data['item_info'],
+            "items_in_order": item_info + [doc for doc in item_docs if doc["id"] == "Hub"],
             "route_otp": random.randint(10000, 99999),
             "last_modified": str(datetime.now()),
         }
-        global_data_info.append(data)
         documents.append(document)
 
     db.route.insert_many(documents)
-    return {"routes": documents, "time_taken": time()-start, "total_cost": total_cost}
+    # db.item.update_many({"id": {"$in": item_ids}}, {"$set": {
+    #                     "control.is_assigned": True, "control.is_fulfilled": False, "control.is_cancelled": False}})
+    return {"routes": list(db.route.find({}, {"_id": 0})), "time_taken": time()-start, "total_cost": total_cost}
 
 
 @router.delete("/delete-pickup/{item_id}")
