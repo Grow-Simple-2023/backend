@@ -17,14 +17,3 @@ services:
       - ./mongo_data:/data/db
     env_file:
       - .env
-
-  backend:
-    build: ./
-    container_name: backend
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - '8040:8000'
-    depends_on:
-      - mongodb
