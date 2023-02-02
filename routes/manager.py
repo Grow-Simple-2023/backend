@@ -108,7 +108,7 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
-    rider_volume = 15**3 * 11
+    rider_volume = 15**3 * 30
     check_role(user_data, ["ADMIN"])
     start = time()
     hub_lat_long = db.item.find_one({"id": "Hub"})["location"]
@@ -190,7 +190,8 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
                     if node != -1 else "Hub" for node in route]
         item_docs = list(db.item.find(
             {"id": {"$in": item_ids + ["Hub"]}}, {"_id": 0}))
-        item_info = [doc for doc in item_docs if doc["id"] in item_ids]
+        item_info_dict = {doc["id"]: doc for doc in item_docs}
+        item_info = [item_info_dict[item_id] for item_id in item_ids]
         document = {
             "rider_id": rider_id,
             "rider_location": [hub_lat_long],
