@@ -182,7 +182,7 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
     total_cost = return_dict["total_cost"]
 
     distribution = [[elem - 1 for elem in row] for row in distribution]
-
+    print(len(all_routes))
     documents = []
     for index, route in enumerate(all_routes):
         rider_id = distribution_info.rider_phone_nos[index]
