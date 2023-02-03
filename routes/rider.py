@@ -93,3 +93,22 @@ async def is_route_modified_after(route_id: str, last_modified: str, user_data=D
         raise HTTPException(
             status_code=404, detail=f"Route not found: {route_id}")
     return {"is_modified": existing_route["last_modified"] > last_modified}
+
+
+@router.post("/send-self-location")
+async def send_self_location(location: Location, user_data=Depends(decode_jwt)):
+    check_role(user_data, ["RIDER"])
+    phone_no = check_role["phone_no"]
+    route_info = db.route.find_one({"rider_id": phone_no})
+    if not route_info:
+        raise HTTPException(
+            status_code=404, detail=f"Route not found: {phone_no}")
+    
+    doc = {
+        "latitude": location.latitude,
+        "longitiude": location.longitiude,
+        "time": location.timestamp
+    }
+    db.route.update_one({"rider_id": phone_no}, {"$push": {"rider_location": doc}})
+    return {"message": "Location Updated Successfully"}
+    

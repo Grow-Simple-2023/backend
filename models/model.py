@@ -35,3 +35,8 @@ class Token(BaseModel):
 class Login(BaseModel):
     phone_no: str
     password: str
+    
+class Location(BaseModel):
+    latitude: float
+    longitude: float
+    timestamp: int

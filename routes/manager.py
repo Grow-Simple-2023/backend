@@ -52,8 +52,8 @@ async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
 @router.get("/items-in-delivery")
 async def current_items_in_delivery(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    items_in_delivery = list(db.item.find(
-        {"control.is_assigned": True, "control.is_fulfilled": False}, {"_id": 0}))
+    items_in_delivery = list(db.route.find(
+        {}, {"_id": 0}))
     return {"items_in_delivery": items_in_delivery}
 
 
@@ -104,6 +104,16 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
         raise HTTPException(
             status_code=404, detail=f"Rider not found: {rider_no}")
     return {"rider": rider}
+
+@router.get("/delivered")
+async def get_delivered_items(user_data=Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
+    return {"delivered_items": list(db.item.find({"control.is_delivery": True, "control.is_fulfilled": True}, {"_id": 0}))}
+
+@router.get("/in-pickup")
+async def get_items_in_pickup(user_data=Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
+    return {"items_in_pickup": list(db.item.find({"control.is_pickup": True, "control.is_fulfilled": False}, {"_id": 0}))}
 
 
 @router.post("/distribute")
@@ -219,7 +229,6 @@ async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
 
     item_doc = db.item.find_one_and_update(
         {"id": item_id,
-         "control.is_assigned": True,
          "control.is_pickup": True},
         {"$set": {
             "control.is_assigned": False,
@@ -241,14 +250,11 @@ async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
         return_document=ReturnDocument.AFTER,
         projection={"_id": 0}
     )
-    if not route_doc:
-        raise HTTPException(
-            status_code=404, detail=f"Route containing item {item_id} not found")
-
-    db.route.update_one(
-        {"rider_id": route_doc["rider_id"]},
-        {"$set": {"last_modified": str(datetime.now())}}
-    )
+    if route_doc:
+        db.route.update_one(
+            {"rider_id": route_doc["rider_id"]},
+            {"$set": {"last_modified": str(datetime.now())}}
+        )
 
     return {"removed_pickup": item_doc}
 
