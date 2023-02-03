@@ -326,26 +326,25 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
 async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     file_content = await file.read()
-    
+
     if not os.path.exists("./services/temp_files"):
         os.makedirs("./services/temp_files")
     x_file_name = "./services/temp_files/"+f"{random.randint(1, 9999999)}.xlsx"
-    
+
     with open(x_file_name, "wb") as f:
         f.write(file_content)
-    
+
     df = pd.read_excel(x_file_name)
-    print(df)
+
     try:
         df = df.drop(columns=["Unnamed: 0"])
-    except: 
+    except:
         pass
-    
+
     os.remove(x_file_name)
-    
+
     N = len(df)
 
-    
     random_file = f"{random.randint(10000, 99999)}.json"
     with open("./services/temp_files/"+random_file, "w+") as f:
         json.dump({"adds": df["address"].tolist()}, f)
@@ -374,6 +373,12 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
             status_code=400, detail="Addresses could not be resolved to a location")
 
     documents, docs = [], []
+
+    try:
+        phone_nos = df["phone_no"].tolist()
+    except:
+        phone_nos = df["AWB"].tolist()
+
     for i in range(N):
         now = str(datetime.now())
         otp_hash = sum_of_chars(now+str(lat_longs[i][0])+str(lat_longs[i][1]))
@@ -402,9 +407,10 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
             },
             "OTP": int(str((otp_hash % 9) + 1) + str(otp_hash % 10000)),
             "delivered_on": None,
-            "phone_no": str(df['numbers'][i])
+            "phone_no": str(phone_nos[i])
         }
         documents.append(document)
     db.item.insert_many(documents)
-    for i in range(N): del documents[i]["_id"]
+    for i in range(N):
+        del documents[i]["_id"]
     return {"data": documents}
