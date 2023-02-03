@@ -1,5 +1,6 @@
 import json
 import random
+import tempfile
 import subprocess
 import pandas as pd
 import multiprocessing
@@ -322,20 +323,29 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
 
 
 @router.post("/load_items")
-def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
+async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    df = pd.read_excel(file.file).drop(columns=["Unnamed: 0"])
-    N = len(df)
-
+    file_content = await file.read()
+    
     if not os.path.exists("./services/temp_files"):
         os.makedirs("./services/temp_files")
+    x_file_name = f"{random.randint(1, 9999999)}.xlsx"
+    
+    with open("./services/temp_files/"+x_file_name, "wb") as f:
+        f.write(file_content)
+    
+    df = pd.read_excel("temp.xlsx").drop(columns=["Unnamed: 0"])
+    
+    os.remove("./services/temp_files/"+x_file_name)
+    
+    N = len(df)
 
+    
     random_file = f"{random.randint(10000, 99999)}.json"
     with open("./services/temp_files/"+random_file, "w+") as f:
         json.dump({"adds": df["address"].tolist()}, f)
 
-    out = subprocess.run(["python", "./services/geocode_file.py", random_file], capture_output=True)
-    print(out)
+    out = subprocess.run(["python3", "./services/geocode_file.py", random_file])
 
     with open("./services/temp_files/"+random_file, "r") as f:
         lat_longs = json.load(f)

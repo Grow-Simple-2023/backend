@@ -49,8 +49,6 @@ async def geocode_helper(addresses: List[str]) -> List[List[float]]:
 with open("./services/temp_files/"+sys.argv[1], "r") as f:
     addresses = json.load(f)
 
-print("Hello")
-
 addresses = addresses["adds"]
 loop = asyncio.get_event_loop()
 lat_longs = loop.run_until_complete(geocode_helper(addresses))

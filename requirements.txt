@@ -7,3 +7,4 @@ PyJWT==2.6.0
 aiohttp
 python-multipart
 pandas
+openpyxl
