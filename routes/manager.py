@@ -329,14 +329,19 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     
     if not os.path.exists("./services/temp_files"):
         os.makedirs("./services/temp_files")
-    x_file_name = f"{random.randint(1, 9999999)}.xlsx"
+    x_file_name = "./services/temp_files/"+f"{random.randint(1, 9999999)}.xlsx"
     
-    with open("./services/temp_files/"+x_file_name, "wb") as f:
+    with open(x_file_name, "wb") as f:
         f.write(file_content)
     
-    df = pd.read_excel("temp.xlsx").drop(columns=["Unnamed: 0"])
+    df = pd.read_excel(x_file_name)
+    print(df)
+    try:
+        df = df.drop(columns=["Unnamed: 0"])
+    except: 
+        pass
     
-    os.remove("./services/temp_files/"+x_file_name)
+    os.remove(x_file_name)
     
     N = len(df)
 
