@@ -1,5 +1,7 @@
 import json
 import random
+import subprocess
+import pandas as pd
 import multiprocessing
 from services.auth import *
 from time import time, sleep
@@ -9,7 +11,7 @@ from services.multiprocess import *
 from models.model import DistributeModel
 from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, Depends, File, UploadFile
 
 router = APIRouter()
 
@@ -35,12 +37,12 @@ async def get_users(load: str = Depends(decode_jwt)):
 async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     no_of_successful_deleveries = db.item.count_documents({"EDD": {"$lte": str(datetime.now())},
-                                                         "control.is_fulfilled": True,
-                                                         "$expr": {"$lte": ["$delivered_on", "$EDD"]},
-                                                         "control.is_cancelled": False})
+                                                           "control.is_fulfilled": True,
+                                                           "$expr": {"$lte": ["$delivered_on", "$EDD"]},
+                                                           "control.is_cancelled": False})
 
     total_deliveries_to_be_done = db.item.count_documents({"EDD": {"$lte": str(datetime.now())},
-                                                         "control.is_cancelled": False})
+                                                           "control.is_cancelled": False})
 
     percentage_of_successful_deliveries = (
         no_of_successful_deleveries/total_deliveries_to_be_done)*100
@@ -105,10 +107,12 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
             status_code=404, detail=f"Rider not found: {rider_no}")
     return {"rider": rider}
 
+
 @router.get("/delivered")
 async def get_delivered_items(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     return {"delivered_items": list(db.item.find({"control.is_delivery": True, "control.is_fulfilled": True}, {"_id": 0}))}
+
 
 @router.get("/in-pickup")
 async def get_items_in_pickup(user_data=Depends(decode_jwt)):
@@ -315,3 +319,77 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
                 cost_index_volume_bag["cost"] = road_distance(
                     a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)
                 cost_index_volume
+
+
+@router.post("/load_items")
+def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
+    check_role(user_data, ["ADMIN"])
+    df = pd.read_excel(file.file).drop(columns=["Unnamed: 0"])
+    N = len(df)
+
+    if not os.path.exists("./services/temp_files"):
+        os.makedirs("./services/temp_files")
+
+    random_file = f"{random.randint(10000, 99999)}.json"
+    with open("./services/temp_files/"+random_file, "w+") as f:
+        json.dump({"adds": df["address"].tolist()}, f)
+
+    out = subprocess.run(["python", "./services/geocode_file.py", random_file], capture_output=True)
+    print(out)
+
+    with open("./services/temp_files/"+random_file, "r") as f:
+        lat_longs = json.load(f)
+
+    lat_longs = lat_longs["ll"]
+
+    os.remove("./services/temp_files/"+random_file)
+
+    # lat_longs = [(random.uniform(12, 13), random.uniform(77, 78))
+    #              for i in range(N)]
+
+    def sum_of_chars(s: str) -> int:
+        return sum(ord(c) for c in s)
+
+    try:
+        for lat_long in lat_longs:
+            assert lat_long[0] != None and lat_long[1] != None
+        assert len(lat_longs) == N
+    except:
+        raise HTTPException(
+            status_code=400, detail="Addresses could not be resolved to a location")
+
+    documents, docs = [], []
+    for i in range(N):
+        now = str(datetime.now())
+        otp_hash = sum_of_chars(now+str(lat_longs[i][0])+str(lat_longs[i][1]))
+        document = {
+            "id": df["product_id"][i]+str(random.randint(0, 999999999)),
+            "title": f"Watch {i}",
+            "description": {
+                "length": None,
+                "breadth": None,
+                "height": None,
+                "weight": None
+            },
+            "address": df["address"][i],
+            "location": {
+                "latitude": lat_longs[i][0],
+                "longitude": lat_longs[i][1]
+            },
+            # TODO: Add EDD from file
+            "EDD": now,
+            "control": {
+                "is_assigned": False,
+                "is_fulfilled": False,
+                "is_pickup": False,
+                "is_delivery": True,
+                "is_cancelled": False
+            },
+            "OTP": int(str((otp_hash % 9) + 1) + str(otp_hash % 10000)),
+            "delivered_on": None,
+            "phone_no": str(df['numbers'][i])
+        }
+        documents.append(document)
+    db.item.insert_many(documents)
+    for i in range(N): del documents[i]["_id"]
+    return {"data": documents}
