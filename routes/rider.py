@@ -59,11 +59,11 @@ async def item_status_update(item_status: ItemStatusModel, user_data=Depends(dec
 @router.post("/modify-route")
 async def modify_route(modify_route: ModifyRoute, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN", "RIDER"])
+    rider_id, item_ids_in_order = modify_route.rider_id, modify_route.item_ids_in_order
     if (user_data["role"] == "RIDER"):
         if (rider_id != user_data["phone_no"]):
             raise HTTPException(
                 status_code=404, detail="You are not authorized to modify this route")
-    rider_id, item_ids_in_order = modify_route.rider_id, modify_route.item_ids_in_order
     existing_route = db.route.find_one({"rider_id": rider_id}, {"_id": 0})
     if not existing_route:
         raise HTTPException(
