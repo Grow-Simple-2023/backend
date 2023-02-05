@@ -2,6 +2,10 @@ from typing import List
 from pydantic import BaseModel
 from enum import Enum
 
+class ModifyRoute(BaseModel):
+    rider_id: str
+    item_ids_in_order: List[str]
+
 class DistributeModel(BaseModel):
     item_ids: List[str]
     rider_phone_nos: List[str]

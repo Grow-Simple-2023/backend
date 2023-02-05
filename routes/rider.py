@@ -2,7 +2,7 @@ from services.auth import *
 from datetime import datetime
 from config.db_config import db
 from fastapi import APIRouter, HTTPException, Depends
-from models.model import ItemStatusModel, RouteEndModel
+from models.model import *
 
 
 router = APIRouter()
@@ -56,13 +56,14 @@ async def item_status_update(item_status: ItemStatusModel, user_data=Depends(dec
     return {"updated_item": item} if item_status.status == 0 else item
 
 
-@router.put("/modify-route")
-async def modify_route(rider_id: str, item_ids_in_order: List[str], user_data=Depends(decode_jwt)):
+@router.post("/modify-route")
+async def modify_route(modify_route: ModifyRoute, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN", "RIDER"])
-    if (role == "RIDER"):
+    if (user_data["role"] == "RIDER"):
         if (rider_id != user_data["phone_no"]):
             raise HTTPException(
                 status_code=404, detail="You are not authorized to modify this route")
+    rider_id, item_ids_in_order = modify_route.rider_id, modify_route.item_ids_in_order
     existing_route = db.route.find_one({"rider_id": rider_id}, {"_id": 0})
     if not existing_route:
         raise HTTPException(
@@ -75,7 +76,7 @@ async def modify_route(rider_id: str, item_ids_in_order: List[str], user_data=De
         assert len(new_order) == len(existing_order)
     except:
         raise HTTPException(
-            status_code=404, detail=f"Invalid order: {rider_id}")
+            status_code=404, detail=f"Invalid order")
     db.route.update_one({"rider_id": rider_id}, {
                         "$set": {"items_in_order": new_order, "last_modified": str(datetime.now())}})
     return {"items_in_route": db.route.find_one({"rider_id": rider_id}, {"_id": 0})}
@@ -103,12 +104,12 @@ async def send_self_location(location: Location, user_data=Depends(decode_jwt)):
     if not route_info:
         raise HTTPException(
             status_code=404, detail=f"Route not found: {phone_no}")
-    
+
     doc = {
         "latitude": location.latitude,
         "longitiude": location.longitiude,
         "time": location.timestamp
     }
-    db.route.update_one({"rider_id": phone_no}, {"$push": {"rider_location": doc}})
+    db.route.update_one({"rider_id": phone_no}, {
+                        "$push": {"rider_location": doc}})
     return {"message": "Location Updated Successfully"}
-    
