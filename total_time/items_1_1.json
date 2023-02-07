@@ -1,0 +1,598 @@
+{
+  "delivered_items": [
+    {
+      "id": "40834506264",
+      "product_id": "SKU_8",
+      "title": "Watch 0",
+      "description": {
+        "length": 11.591375930286434,
+        "breadth": 17.078443842001427,
+        "height": 15.538824606729392,
+        "weight": 19.141954392820995
+      },
+      "address": "1260, SY 35/4, SJR Tower's, 7th Phase, 24th Main Puttanhalli, JP Nagar, Bangalore",
+      "location": {
+        "latitude": 12.910027865709027,
+        "longitude": 77.59252343838398
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 53136,
+      "delivered_on": null,
+      "phone_no": "40834506264"
+    },
+    {
+      "id": "81893229584",
+      "product_id": "SKU_90",
+      "title": "Watch 1",
+      "description": {
+        "length": 15.565378172971524,
+        "breadth": 17.946427204419393,
+        "height": 17.100324016364766,
+        "weight": 17.075372747384904
+      },
+      "address": "82/3, Third Floor, Khata 866, Panathur Main Road, Bhoganahalli Cross, Marathahalli, Bangalore",
+      "location": {
+        "latitude": 12.910986599669862,
+        "longitude": 77.59912820000001
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 93131,
+      "delivered_on": null,
+      "phone_no": "81893229584"
+    },
+    {
+      "id": "59723146139",
+      "product_id": "SKU_86",
+      "title": "Watch 2",
+      "description": {
+        "length": 14.372409901395757,
+        "breadth": 11.861702668141177,
+        "height": 13.579211173177,
+        "weight": 18.601167958259722
+      },
+      "address": "Embassy Tech Square Food Court, Cessna Tech Park, Outer Ring Road, Kadubeesanahalli, Marathahalli, Bangalore",
+      "location": {
+        "latitude": -27.232463796622795,
+        "longitude": 153.09527471078104
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": true
+      },
+      "OTP": 23223,
+      "delivered_on": null,
+      "phone_no": "59723146139"
+    },
+    {
+      "id": "13550952423",
+      "product_id": "SKU_129",
+      "title": "Watch 3",
+      "description": {
+        "length": 14.336044909149289,
+        "breadth": 18.808736206690888,
+        "height": 14.899339534332675,
+        "weight": 10.058335600031764
+      },
+      "address": "44, 3rd Cross, Marenahalli, 2nd Phase, JP Nagar, Bangalore",
+      "location": {
+        "latitude": 12.91086479966985,
+        "longitude": 77.59677889999999
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 43153,
+      "delivered_on": null,
+      "phone_no": "13550952423"
+    },
+    {
+      "id": "37256804721",
+      "product_id": "SKU_29",
+      "title": "Watch 4",
+      "description": {
+        "length": 18.088516463389933,
+        "breadth": 18.64644604958672,
+        "height": 17.402500094891987,
+        "weight": 19.67206794350347
+      },
+      "address": "2617, 27th Main, Sector 1, Opposite CPWD Complex, HSR, Bangalore",
+      "location": {
+        "latitude": 12.915437999670331,
+        "longitude": 77.6515839
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 72778,
+      "delivered_on": null,
+      "phone_no": "37256804721"
+    },
+    {
+      "id": "98320322280",
+      "product_id": "SKU_103",
+      "title": "Watch 5",
+      "description": {
+        "length": 13.792024121450865,
+        "breadth": 12.118024397544822,
+        "height": 14.810315372945476,
+        "weight": 14.032377464366053
+      },
+      "address": "493, 13th Cross, 2nd Stage, Behind BDA Complex, Indiranagar, Bangalore",
+      "location": {
+        "latitude": 12.914481999670228,
+        "longitude": 77.56430319999998
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 63164,
+      "delivered_on": null,
+      "phone_no": "98320322280"
+    },
+    {
+      "id": "64727690316",
+      "product_id": "SKU_79",
+      "title": "Watch 6",
+      "description": {
+        "length": 11.587684002504064,
+        "breadth": 18.703339888983702,
+        "height": 15.79849072407328,
+        "weight": 17.833174753320264
+      },
+      "address": "2334, Aarush Arcade, 17th Cross, 1st Sector, HSR, Bangalore",
+      "location": {
+        "latitude": 12.915722299670357,
+        "longitude": 77.6321773
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 62768,
+      "delivered_on": null,
+      "phone_no": "64727690316"
+    },
+    {
+      "id": "33739970099",
+      "product_id": "SKU_39",
+      "title": "Watch 7",
+      "description": {
+        "length": 17.343918728460253,
+        "breadth": 12.07965417982357,
+        "height": 14.080986374332706,
+        "weight": 13.91874708085347
+      },
+      "address": "1659, 27th Main Road, Sector 2, HSR Layout, HSR, Bangalore",
+      "location": {
+        "latitude": 12.91333955429123,
+        "longitude": 77.63547929219838
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 23088,
+      "delivered_on": null,
+      "phone_no": "33739970099"
+    },
+    {
+      "id": "70719650178",
+      "product_id": "SKU_118",
+      "title": "Watch 8",
+      "description": {
+        "length": 11.649714338514825,
+        "breadth": 13.00302376184674,
+        "height": 19.526939036116147,
+        "weight": 14.407740643109703
+      },
+      "address": "31st Main, Near NIFT, Sector 1, HSR, Bangalore",
+      "location": {
+        "latitude": 12.909074599669662,
+        "longitude": 77.64945059999998
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 73183,
+      "delivered_on": null,
+      "phone_no": "70719650178"
+    },
+    {
+      "id": "33192159992",
+      "product_id": "SKU_43",
+      "title": "Watch 9",
+      "description": {
+        "length": 19.788328203233753,
+        "breadth": 12.016067823401992,
+        "height": 19.762953023179225,
+        "weight": 10.922811606518565
+      },
+      "address": "19/4 & 27, Ground Floor, Indiqube Alpha, Panathur Junction, Kadubisanahalli, Sarjapur Outer Ring Road, Marathahalli, Bangalore",
+      "location": {
+        "latitude": 12.931926999672058,
+        "longitude": 77.6908101
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 42775,
+      "delivered_on": null,
+      "phone_no": "33192159992"
+    },
+    {
+      "id": "87348538617",
+      "product_id": "SKU_28",
+      "title": "Watch 10",
+      "description": {
+        "length": 11.372826055609899,
+        "breadth": 10.278157342490307,
+        "height": 10.888347077022974,
+        "weight": 16.584658918395732
+      },
+      "address": "322, Shalini Complex, CMH Road, Indiranagar, Bangalore",
+      "location": {
+        "latitude": 12.982112699677343,
+        "longitude": 77.6369047
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 62777,
+      "delivered_on": null,
+      "phone_no": "87348538617"
+    },
+    {
+      "id": "90135330114",
+      "product_id": "SKU_131",
+      "title": "Watch 11",
+      "description": {
+        "length": 19.40383171287252,
+        "breadth": 10.794328688836206,
+        "height": 11.377927577869238,
+        "weight": 19.44554970037949
+      },
+      "address": "Ground Floor, Figure and Fitness Gym, ESI Hospital Road, Double Road, Stage 3, Indiranagar, Bangalore",
+      "location": {
+        "latitude": 12.999264154512895,
+        "longitude": 77.54222831013493
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 53127,
+      "delivered_on": null,
+      "phone_no": "90135330114"
+    },
+    {
+      "id": "98618659069",
+      "product_id": "SKU_43",
+      "title": "Watch 12",
+      "description": {
+        "length": 15.587049305355208,
+        "breadth": 12.823685382821527,
+        "height": 15.6887277787292,
+        "weight": 11.065815532106946
+      },
+      "address": "844, Binnamangala, 1st Stage, Near B.D.A Complex, Double Road, Indiranagar, Bangalore",
+      "location": {
+        "latitude": 12.94019589967293,
+        "longitude": 77.62533869999999
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 83130,
+      "delivered_on": null,
+      "phone_no": "98618659069"
+    },
+    {
+      "id": "37317986613",
+      "product_id": "SKU_106",
+      "title": "Watch 13",
+      "description": {
+        "length": 17.39095752659095,
+        "breadth": 14.256943864241979,
+        "height": 15.932440131952884,
+        "weight": 18.811015637110927
+      },
+      "address": "3rd Cross, 2nd Stage, Domlur, Bangalore",
+      "location": {
+        "latitude": 12.964067899675435,
+        "longitude": 77.6406561
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 12781,
+      "delivered_on": null,
+      "phone_no": "37317986613"
+    },
+    {
+      "id": "83760820881",
+      "product_id": "SKU_33",
+      "title": "Watch 14",
+      "description": {
+        "length": 11.497539091335154,
+        "breadth": 13.172590174881549,
+        "height": 18.406042071424082,
+        "weight": 19.37370590871906
+      },
+      "address": "Shop 217, 2nd Main Road, Kadubeesanahalli Croma, Back Side Road, Near Kumbeshwara Temple Marathahalli, Bangalore",
+      "location": {
+        "latitude": 13.000833599679318,
+        "longitude": 77.5639353
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 92771,
+      "delivered_on": null,
+      "phone_no": "83760820881"
+    },
+    {
+      "id": "19222028019",
+      "product_id": "SKU_47",
+      "title": "Watch 15",
+      "description": {
+        "length": 17.125983560394,
+        "breadth": 12.314887955504904,
+        "height": 12.76443853543315,
+        "weight": 11.640545054346882
+      },
+      "address": "68, Appareddy Palya, Near ESI Hospital, HAL 2nd Stage, Double Road, Indiranagar, Bangalore",
+      "location": {
+        "latitude": 13.011690899680469,
+        "longitude": 77.6702315
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 42766,
+      "delivered_on": null,
+      "phone_no": "19222028019"
+    },
+    {
+      "id": "35278429230",
+      "product_id": "SKU_11",
+      "title": "Watch 16",
+      "description": {
+        "length": 19.026666174800248,
+        "breadth": 19.800869897710292,
+        "height": 11.617375203594051,
+        "weight": 19.628376910415682
+      },
+      "address": "89/1, Monnekollal Village, Varthur Hobli, Outer Ring Road, Marathahalli, Bangalore",
+      "location": {
+        "latitude": 12.925915899671425,
+        "longitude": 77.6870579
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 92789,
+      "delivered_on": null,
+      "phone_no": "35278429230"
+    },
+    {
+      "id": "85641566876",
+      "product_id": "SKU_65",
+      "title": "Watch 17",
+      "description": {
+        "length": 12.54050676715405,
+        "breadth": 17.084153996878488,
+        "height": 17.6072092798085,
+        "weight": 18.002874682754992
+      },
+      "address": "Outer Ring Road, Opposite to JP Morgan, Kodbisanhalli, Marathahalli, Bangalore",
+      "location": {
+        "latitude": 12.981852647711236,
+        "longitude": 77.69420574822666
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 73138,
+      "delivered_on": null,
+      "phone_no": "85641566876"
+    },
+    {
+      "id": "44350146864",
+      "product_id": "SKU_80",
+      "title": "Watch 18",
+      "description": {
+        "length": 11.20108069844935,
+        "breadth": 11.91768302423109,
+        "height": 10.78129274639263,
+        "weight": 13.919086917787356
+      },
+      "address": "2318, Sector 1, Near NIFT College, HSR, Bangalore",
+      "location": {
+        "latitude": 12.932106099672076,
+        "longitude": 77.69091999999999
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 73174,
+      "delivered_on": null,
+      "phone_no": "44350146864"
+    },
+    {
+      "id": "35688482050",
+      "product_id": "SKU_88",
+      "title": "Watch 19",
+      "description": {
+        "length": 16.40211489357496,
+        "breadth": 11.333667320758256,
+        "height": 14.959203449083223,
+        "weight": 15.177321242727587
+      },
+      "address": "697, 12th Cross, 27th Main, 1st Sector, HSR, Bangalore",
+      "location": {
+        "latitude": 12.909234199669678,
+        "longitude": 77.6398674
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 72796,
+      "delivered_on": null,
+      "phone_no": "35688482050"
+    },
+    {
+      "id": "75730852176",
+      "product_id": "SKU_103",
+      "title": "Watch 20",
+      "description": {
+        "length": 15.361194820454559,
+        "breadth": 19.582662324083596,
+        "height": 11.178927569687852,
+        "weight": 13.004272470696492
+      },
+      "address": "1260 SY 35/4 SJR Tower's, 24th Main Puttanhalli, JP Nagar 7th Phase, Bangalore",
+      "location": {
+        "latitude": 12.910027865709027,
+        "longitude": 77.59252343838398
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 53136,
+      "delivered_on": null,
+      "phone_no": "75730852176"
+    },
+    {
+      "id": "65256560203",
+      "product_id": "SKU_148",
+      "title": "Watch 21",
+      "description": {
+        "length": 13.47362629014266,
+        "breadth": 15.72814295252564,
+        "height": 16.52828200306212,
+        "weight": 17.186999409685995
+      },
+      "address": "915, 24th Main Road, 2nd Phase, Mayura Circle, JP Nagar, Bangalore",
+      "location": {
+        "latitude": 13.041962384421396,
+        "longitude": 77.55472060114923
+      },
+      "EDD": "2023-02-07 14:31:15.482991",
+      "control": {
+        "is_assigned": false,
+        "is_fulfilled": true,
+        "is_pickup": false,
+        "is_delivery": true,
+        "is_cancelled": false
+      },
+      "OTP": 93113,
+      "delivered_on": null,
+      "phone_no": "65256560203"
+    }
+  ]
+}
