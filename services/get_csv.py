@@ -1,16 +1,24 @@
 import csv
-# List of latitude and longitude coordinates
-def get_csv (lat_lon: list, file_name: str):
-    # lat_lon = [[51.5074, 0.1278], [51.5194, 0.1322], [51.5275, 0.1213]]
 
-    # Line string representation of edges connecting the nodes
-    edges = ["LINESTRING({} {} , {} {})".format(lat_lon[0][1], lat_lon[0][0], lat_lon[1][1], lat_lon[1][0]),
-            "LINESTRING({} {} , {} {})".format(lat_lon[1][1], lat_lon[1][0], lat_lon[2][1], lat_lon[2][0])]
+def write_to_csv(coordinates: list, filename: str, id: list):
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
 
-    # Save the list of latitude and longitude and edges to a CSV file
-    with open(file_name, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Node", "Edge"])
-        for i, coord in enumerate(lat_lon):
-            writer.writerow([f"{coord[1]}, {coord[0]}", edges[i]])
-    
+        # Write the header for the nodes
+        writer.writerow(["AWB", "latitude", "longitude"])
+
+        # Write the nodes to the file
+        for i, coord in enumerate(coordinates):
+            writer.writerow([id[i], coord[0], coord[1]])
+
+        # Write the header for the edges
+        writer.writerow(["edge_id", "start_AWB", "end_AWB", "geometry"])
+
+        # Write the edges to the file
+        for i, coord in enumerate(coordinates[:-1]):
+            start = id[i]
+            end = id[i] + 1
+            writer.writerow([i, start, end, "LINESTRING({} {})".format(coord[0], coord[1])])
+
+# Example usage
+write_to_csv(coordinates=[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)], filename="test.csv", id=[45,3,43,4,54])
