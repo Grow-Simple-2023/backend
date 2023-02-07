@@ -18,6 +18,15 @@ from fastapi import APIRouter, HTTPException, Request, Depends, File, UploadFile
 router = APIRouter()
 
 
+def is_in_bang(point, coordinates=[12.853789, 77.425682, 13.101558, 77.744427]):
+    x, y = point
+    x_min, y_min, x_max, y_max = coordinates
+    if x_min <= x <= x_max and y_min <= y <= y_max:
+        return True
+    else:
+        return False
+
+
 @router.get("/")
 async def manager_home(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
@@ -124,7 +133,7 @@ async def get_items_in_pickup(user_data=Depends(decode_jwt)):
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
-    rider_volume = 15**3 * 40
+    rider_volume = 15**3 * 20
     check_role(user_data, ["ADMIN"])
     start = time()
     hub_lat_long = db.item.find_one({"id": "Hub"})["location"]
@@ -226,6 +235,7 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
     db.route.insert_many(documents)
     db.item.update_many({"id": {"$in": item_ids}}, {"$set": {
                         "control.is_assigned": True, "control.is_fulfilled": False, "control.is_cancelled": False}})
+
     return {"routes": list(db.route.find({}, {"_id": 0})), "time_taken": time()-start, "total_cost": total_cost}
 
 
@@ -351,7 +361,7 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
         json.dump({"adds": df["address"].tolist()}, f)
 
     out = subprocess.run(
-        ["python3", "./services/geocode_file.py", random_file])
+        ["python", "./services/geocode_file.py", random_file])
 
     with open("./services/temp_files/"+random_file, "r") as f:
         lat_longs = json.load(f)
@@ -384,19 +394,22 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     for i in range(N):
         now = str(datetime.now())
         otp_hash = sum_of_chars(now+str(lat_longs[i][0])+str(lat_longs[i][1]))
+        is_cancelled = not is_in_bang(
+            (float(lat_longs[i][0]), float(lat_longs[i][1])))
         document = {
-            "id": df["product_id"][i]+str(random.randint(0, 999999999)),
+            "id": str(phone_nos[i]),
+            "product_id": df["product_id"][i],
             "title": f"Watch {i}",
             "description": {
-                "length": None,
-                "breadth": None,
-                "height": None,
-                "weight": None
+                "length": float(random.uniform(10, 20)),
+                "breadth": float(random.uniform(10, 20)),
+                "height": float(random.uniform(10, 20)),
+                "weight": float(random.uniform(10, 20))
             },
             "address": df["address"][i],
             "location": {
-                "latitude": lat_longs[i][0],
-                "longitude": lat_longs[i][1]
+                "latitude": float(lat_longs[i][0]),
+                "longitude": float(lat_longs[i][1])
             },
             # TODO: Add EDD from file
             "EDD": now,
@@ -405,7 +418,7 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
                 "is_fulfilled": False,
                 "is_pickup": False,
                 "is_delivery": True,
-                "is_cancelled": False
+                "is_cancelled": is_cancelled
             },
             "OTP": int(str((otp_hash % 9) + 1) + str(otp_hash % 10000)),
             "delivered_on": None,
@@ -415,4 +428,4 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     db.item.insert_many(documents)
     for i in range(N):
         del documents[i]["_id"]
-    return {"data": documents}
+    return {"data": "Data loaded successfully"}
