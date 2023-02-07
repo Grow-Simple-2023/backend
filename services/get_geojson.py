@@ -1,6 +1,7 @@
 import requests
+import json
 # route_data = [[15.638070, 74.916183],[15.399739, 75.001707], [15.452276, 75.302718], [15.575888, 75.366442],[15.857958, 75.108613],[15.813357, 74.487377],[15.638070, 74.916183]]
-def get_geojson(route_data: list):
+def get_geojson(route_data: list, file_name: str):
     api_key = "AtD6KKbxZbMGumtiusZaHBClfullYMvlqCbIacNNkQQu-ONLx-95xel_a6y45wTH"
     route_length = len(route_data)
     coordinates = []
@@ -27,6 +28,9 @@ def get_geojson(route_data: list):
         }
     }]
     print(geojson)
+    with open(file_name, "w+") as file:
+    # Write the dictionary to the file as a JSON string
+        json.dump(geojson, file)
     return geojson
 
 
