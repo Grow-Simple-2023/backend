@@ -7,6 +7,7 @@ __pycache__/
 path-tsp-1.5*
 Travaelling*
 Minimum-Cost*
+temp_files
 # C extensions
 *.so
 

@@ -124,7 +124,7 @@ async def get_items_in_pickup(user_data=Depends(decode_jwt)):
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
-    rider_volume = 15**3 * 20
+    rider_volume = 15**3 * 40
     check_role(user_data, ["ADMIN"])
     start = time()
     hub_lat_long = db.item.find_one({"id": "Hub"})["location"]
@@ -350,7 +350,8 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     with open("./services/temp_files/"+random_file, "w+") as f:
         json.dump({"adds": df["address"].tolist()}, f)
 
-    out = subprocess.run(["python3", "./services/geocode_file.py", random_file])
+    out = subprocess.run(
+        ["python3", "./services/geocode_file.py", random_file])
 
     with open("./services/temp_files/"+random_file, "r") as f:
         lat_longs = json.load(f)
