@@ -278,8 +278,8 @@ async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
 
 
 @router.put("/add-pickup/{item_id}")
-async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
-    check_role(user_data, ["ADMIN"])
+async def add_pickup(item_id: str):
+    # check_role(user_data, ["ADMIN"])
     item_info = db.item.find_one({"id": item_id,
                                   "control.is_fulfilled": True,
                                   "control.is_delivery": True,
@@ -460,17 +460,16 @@ async def get_submission_files():
     documents = list(db.route.find({}))
 
     # geojson file
-    # riders_route = {}
-    # for document in documents:
-    #     route = []
-    #     for item in document["items_in_order"]:
-    #         route.append([item["location"]["latitude"],item["location"]["longitude"]])
-    #     riders_route[document["rider_id"]] = route
-    # riders_route_distance = {}
-    # for rider_id in riders_route:
-    #     res = get_geojson(riders_route[rider_id], "./geojson/"+rider_id+".json")
-    #     riders_route_distance[rider_id] = res
-    # return {"data": riders_route_distance}
+    riders_route = {}
+    for document in documents:
+        route = []
+        for item in document["items_in_order"]:
+            route.append([item["location"]["latitude"],item["location"]["longitude"]])
+        riders_route[document["rider_id"]] = route
+    riders_route_distance = {}
+    for rider_id in riders_route:
+        res = get_geojson(riders_route[rider_id], "./geojson/"+rider_id+".json")
+        riders_route_distance[rider_id] = res
 
     # csv file
     riders_route = {}
@@ -487,4 +486,4 @@ async def get_submission_files():
     for rider_id in riders_route:
         write_to_csv(riders_route[rider_id]["coordinates"],  "./geocsv/" +
                      rider_id+".csv", riders_route[rider_id]["items_id"])
-    return {"success": True}
+    return {"data": riders_route_distance}
