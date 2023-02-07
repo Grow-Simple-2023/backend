@@ -14,6 +14,7 @@ from models.model import DistributeModel
 from services.Clustering import Clustering
 from services.TSP import TSP, road_distance
 from fastapi import APIRouter, HTTPException, Request, Depends, File, UploadFile
+from services.get_geojson import get_geojson
 
 router = APIRouter()
 
@@ -429,3 +430,18 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     for i in range(N):
         del documents[i]["_id"]
     return {"data": "Data loaded successfully"}
+
+@router.get("/submission-files")
+async def get_submission_files():
+    documents = list(db.route.find({}))
+    riders_route = {}
+    for document in documents:
+        route = []
+        for item in document["items_in_order"]:
+            route.append([item["location"]["latitude"],item["location"]["longitude"]])
+        riders_route[document["rider_id"]] = route
+    riders_route_distance = {}
+    for rider_id in riders_route:
+        res = get_geojson(riders_route[rider_id], "./geojson/"+rider_id+".json")
+        riders_route_distance[rider_id] = res
+    return {"data": riders_route_distance}

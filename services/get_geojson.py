@@ -31,7 +31,7 @@ def get_geojson(route_data: list, file_name: str):
     with open(file_name, "w+") as file:
     # Write the dictionary to the file as a JSON string
         json.dump(geojson, file)
-    return geojson
+    # return geojson
 
 
 # print(get_geojson(route_data=route_data))
