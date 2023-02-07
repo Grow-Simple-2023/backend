@@ -1,0 +1,11 @@
+AWB,latitude,longitude
+45,0,0
+3,0,1
+43,1,1
+4,1,0
+54,0,0
+edge_id,start_AWB,end_AWB,geometry
+0,45,46,LINESTRING(0 0)
+1,3,4,LINESTRING(0 1)
+2,43,44,LINESTRING(1 1)
+3,4,5,LINESTRING(1 0)
