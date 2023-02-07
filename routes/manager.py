@@ -333,8 +333,8 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
                 cost_index_volume
 
 
-@router.post("/load_items")
-async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
+@router.post("/load_items/")
+async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     file_content = await file.read()
 
@@ -415,7 +415,7 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
             "EDD": now,
             "control": {
                 "is_assigned": False,
-                "is_fulfilled": False,
+                "is_fulfilled": is_delivered,
                 "is_pickup": False,
                 "is_delivery": True,
                 "is_cancelled": is_cancelled

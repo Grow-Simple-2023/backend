@@ -9,6 +9,3 @@
 - In the final 2000 order test case we will have a few dynamic points addition after every hour , twice , i.e, at end of 1st hour and end of 2nd hour, that's how the relative position of each rider for dynamic routing will be determined.
 - There is no extra effort required to build a separate visualisation for the evaluation ,
   after each hour the estimated positions of rider in each tour is to be known .
-
-
-
