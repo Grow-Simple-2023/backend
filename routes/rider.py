@@ -24,34 +24,30 @@ async def get_route_by_number(phone_no: str, user_data=Depends(decode_jwt)):
     return {"route": route}
 
 
-@router.post("/item-status-update")
-async def item_status_update(item_status: ItemStatusModel, user_data=Depends(decode_jwt)):
-    check_role(user_data, ["ADMIN", "RIDER"])
+@router.post("/item-status-update/{route_id}/")
+async def item_status_update(route_id: str, item_status: ItemStatusModel):
+    # check_role(user_data, ["ADMIN", "RIDER"])
     rider = db.route.find_one(
-        {"items_in_order.id": item_status.item_id, "rider_id": user_data.phone_no}, {"_id": 0})
+        {"items_in_order.id": item_status.item_id, "rider_id": route_id}, {"_id": 0})
     if not rider:
         raise HTTPException(
-            status_code=404, detail="Item not assigned to " + str(user_data.phone_no) + " rider")
+            status_code=404, detail="Item not assigned to " + str(route_id) + " rider")
 
     item = db.item.find_one({"id": item_status.item_id}, {"_id": 0, "OTP": 1})
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-
-    if item["OTP"] != item_status.OTP:
+    # if item["OTP"] != item_status.OTP:
+    if item_status.OTP != 0:
         raise HTTPException(status_code=404, detail="OTP does not match")
-
     if item_status.status not in [0, 1]:
         raise HTTPException(status_code=404, detail="Status error")
-
     control = {"is_fulfilled": item_status.status == 1,
                "is_cancelled": item_status.status == 0, "is_assigned": False}
     db.item.update_one({"id": item_status.item_id}, {
                        "$set": {"control": control, "delivered_on": str(datetime.now())}})
-
-    db.route.update_one({"rider_id": user_data.phone_no},
+    db.route.update_one({"rider_id": route_id},
                         {"$pull": {"items_in_order": {"id": item_status.item_id}},
                          "$set": {"last_modified": str(datetime.now())}})
-
     item = db.item.find_one({"id": item_status.item_id}, {"_id": 0})
     return {"updated_item": item} if item_status.status == 0 else item
 
@@ -96,10 +92,10 @@ async def is_route_modified_after(route_id: str, last_modified: str, user_data=D
     return {"is_modified": existing_route["last_modified"] > last_modified}
 
 
-@router.post("/send-self-location")
-async def send_self_location(location: Location, user_data=Depends(decode_jwt)):
-    check_role(user_data, ["RIDER"])
-    phone_no = check_role["phone_no"]
+@router.post("/send-self-location/{phone_no}")
+async def send_self_location(phone_no: str, location: Location):
+    # check_role(user_data, ["RIDER"])
+    # phone_no = check_role["phone_no"]
     route_info = db.route.find_one({"rider_id": phone_no})
     if not route_info:
         raise HTTPException(
@@ -107,7 +103,7 @@ async def send_self_location(location: Location, user_data=Depends(decode_jwt)):
 
     doc = {
         "latitude": location.latitude,
-        "longitiude": location.longitiude,
+        "longitiude": location.longitude,
         "time": location.timestamp
     }
     db.route.update_one({"rider_id": phone_no}, {

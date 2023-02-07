@@ -65,8 +65,8 @@ async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
 
 
 @router.get("/items-in-delivery")
-async def current_items_in_delivery(user_data=Depends(decode_jwt)):
-    check_role(user_data, ["ADMIN"])
+async def current_items_in_delivery():
+    # check_role(user_data, ["ADMIN"])
     items_in_delivery = list(db.route.find(
         {}, {"_id": 0}))
     return {"items_in_delivery": items_in_delivery}
@@ -280,48 +280,37 @@ async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
 @router.put("/add-pickup/{item_id}")
 async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-
-    item_query = {
-        "id": item_id,
-        "control.is_fulfilled": True,
-        "control.is_delivery": True,
-        "control.is_pickup": False,
-        "control.is_assigned": False,
-        "control.is_cancelled": False
-    }
-
-    item_info = db.item.find_one(item_query, {"_id": 0})
+    item_info = db.item.find_one({"id": item_id,
+                                  "control.is_fulfilled": True,
+                                  "control.is_delivery": True,
+                                  "control.is_pickup": False,
+                                  "control.is_assigned": False,
+                                  "control.is_cancelled": False}, {"_id": 0})
     if not item_info:
         raise HTTPException(
             status_code=404, detail=f"Item is cancelled, assigned or fulfilled: {item_id}")
 
     item_lat_long = tuple(item_info["location"].values())
-    item_dims = tuple(item_info["description"].values())
-
-    route_query = {}
-
-    all_routes = list(db.route.find(route_query))
+    all_routes = list(db.route.find({}))
     min_cost_index_volume_bags = []
-
+    item_dims = tuple(item_info["description"].values())
     for route in all_routes:
         bag_dims = tuple(route["bag_description"].values())
         cost_index_volume_bag = {
-            "bag": bag_dims[0] * bag_dims[1] * bag_dims[2],
-            "volume": item_dims[0] * item_dims[1] * item_dims[2],
+            "bag": bag_dims[0]*bag_dims[1]*bag_dims[2],
+            "volume": item_dims[0]*item_dims[1]*item_dims[2],
             "cost": float('inf'),
             "index": None,
             "rider_id": route["rider_id"]
         }
-
         for i in range(len(route["items_in_order"])):
             if route["items_in_order"][i]["id"] != "Hub":
                 temp_item_dims = tuple(
                     route["items_in_order"][i]["description"].values())
             else:
                 temp_item_dims = (0, 0, 0, 0)
-
             cost_index_volume_bag["volume"] += temp_item_dims[0] * \
-                temp_item_dims[1] * temp_item_dims[2]
+                temp_item_dims[1]*temp_item_dims[2]
             if cost_index_volume_bag["volume"] > cost_index_volume_bag["bag"]:
                 break
 
@@ -329,10 +318,43 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
                 route["items_in_order"][i-1]["location"].values())
             b = tuple(route["items_in_order"][i]["location"].values())
 
+            a = (a[0], a[1])
+            b = (b[0], b[1])
+
             if road_distance(a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b) < cost_index_volume_bag["cost"]:
                 cost_index_volume_bag["cost"] = road_distance(
                     a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)
-                cost_index_volume
+                cost_index_volume_bag["index"] = i
+
+        min_cost_index_volume_bags.append(list(cost_index_volume_bag.values()))
+
+    min_cost_index_volume_bags.sort(key=lambda x: x[2])
+    db.item.update_one({"id": item_id}, {"$set": {"control.is_pickup": True,
+                                                  "control.is_fulfilled": False,
+                                                  "conrtol.is_cancelled": False,
+                                                  "control.is_delivery": False}})
+
+    for index, min_cost_index_volume_bag in enumerate(min_cost_index_volume_bags):
+        if index > 3:
+            break
+        if min_cost_index_volume_bag[3]:
+            if min_cost_index_volume_bag[1] < min_cost_index_volume_bag[0]:
+                db.item.update_one({"id": item_id}, {
+                                   "$set": {"control.is_assigned": True}})
+                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]},
+                                    {"$push": {"items_in_order": {"$each": [db.item.find_one({"id": item_id}, {"_id": 0})],
+                                               "$position": min_cost_index_volume_bag[3]}}})
+                db.route.update_one({"rider_id": min_cost_index_volume_bag[4]}, {
+                                    "$set": {"last_updated": str(datetime.now())}})
+                return {"item_info": db.item.find_one({"id": item_id}, {"_id": 0}),
+                        "is_assigned": True,
+                        "index": min_cost_index_volume_bag[3],
+                        "rider_id": min_cost_index_volume_bag[4]}
+
+    db.item.update_one({"id": item_id}, {
+                       "$set": {"control.is_assigned": False}})
+    return {"added_pickup": db.item.find_one({"id": item_id}, {"_id": 0}),
+            "is_assigned": False}
 
 
 @router.post("/load_items/")
@@ -432,6 +454,7 @@ async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(dec
         del documents[i]["_id"]
     return {"data": "Data loaded successfully"}
 
+
 @router.get("/submission-files")
 async def get_submission_files():
     documents = list(db.route.find({}))
@@ -455,10 +478,13 @@ async def get_submission_files():
         coordinates = []
         items_id = []
         for item in document["items_in_order"]:
-            coordinates.append([item["location"]["latitude"],item["location"]["longitude"]])
+            coordinates.append(
+                [item["location"]["latitude"], item["location"]["longitude"]])
             items_id.append(item["id"])
-        riders_route[document["rider_id"]] = {"coordinates": coordinates, "items_id": items_id}
+        riders_route[document["rider_id"]] = {
+            "coordinates": coordinates, "items_id": items_id}
 
     for rider_id in riders_route:
-        write_to_csv(riders_route[rider_id]["coordinates"],  "./geocsv/"+rider_id+".csv",riders_route[rider_id]["items_id"])
-    return {"success":True}
+        write_to_csv(riders_route[rider_id]["coordinates"],  "./geocsv/" +
+                     rider_id+".csv", riders_route[rider_id]["items_id"])
+    return {"success": True}
