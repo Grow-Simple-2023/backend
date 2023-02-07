@@ -17,8 +17,8 @@ def write_to_csv(coordinates: list, filename: str, id: list):
         # Write the edges to the file
         for i, coord in enumerate(coordinates[:-1]):
             start = id[i]
-            end = id[i] + 1
+            end = id[i+1]
             writer.writerow([i, start, end, "LINESTRING({} {})".format(coord[0], coord[1])])
 
 # Example usage
-write_to_csv(coordinates=[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)], filename="test.csv", id=[45,3,43,4,54])
+# write_to_csv(coordinates=[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)], filename="test.csv", id=[45,3,43,4,54])
