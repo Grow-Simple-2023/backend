@@ -5,6 +5,8 @@ def get_geojson(route_data: list, file_name: str):
     api_key = "AtD6KKbxZbMGumtiusZaHBClfullYMvlqCbIacNNkQQu-ONLx-95xel_a6y45wTH"
     route_length = len(route_data)
     coordinates = []
+    td = 0
+    tt = 0
     for i in range(route_length-1):
         start = f"{route_data[i][0]}, {route_data[i][1]}"
         end = f"{route_data[i+1][0]}, {route_data[i+1][1]}"
@@ -16,6 +18,8 @@ def get_geojson(route_data: list, file_name: str):
         for route in routes:
             coordinates.append(route['maneuverPoint']['coordinates'])
 
+        td += data['resourceSets'][0]['resources'][0]['travelDistance']
+        tt += data['resourceSets'][0]['resources'][0]['travelDuration']
     # ! Building geoson out of coordinates
     geojson = {}
     geojson['type'] = 'FeatureCollection'
@@ -27,12 +31,12 @@ def get_geojson(route_data: list, file_name: str):
             'coordinates': coordinates
         }
     }]
-    print(geojson)
+    # print(geojson)
     with open(file_name, "w+") as file:
-    # Write the dictionary to the file as a JSON string
         json.dump(geojson, file)
-    return geojson
+    # return geojson
 
+    return (td, tt/3600)
 
 # print(get_geojson(route_data=route_data))
 
