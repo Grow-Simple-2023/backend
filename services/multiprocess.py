@@ -2,6 +2,11 @@ from services.TSP import TSP
 
 
 def tsp_calculation(cluster, hub_location, item_lat_long, return_dict, return_list):
+    """
+    Multiprocess TSP helper that performs TSP optimization
+    for one route and adds the final list to a common shared
+    return variable keeping track of all the routes in processes.
+    """
     temp_lat_long = [hub_location]
     for id in cluster:
         temp_lat_long.append(item_lat_long[id-1])
