@@ -12,7 +12,7 @@ from pymongo import ReturnDocument
 from services.multiprocess import *
 from models.model import DistributeModel
 from services.Clustering import Clustering
-from services.TSP import TSP, road_distance
+from services.TSP import TSP, air_distance
 from fastapi import APIRouter, HTTPException, Request, Depends, File, UploadFile
 
 router = APIRouter()
@@ -51,7 +51,6 @@ async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
     percentage_of_successful_deliveries = (
         no_of_successful_deleveries/total_deliveries_to_be_done)*100
     return {"percentage": percentage_of_successful_deliveries}
-
 
 
 @router.get("/items-in-delivery")
@@ -326,9 +325,9 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
             a = (a[0], a[1])
             b = (b[0], b[1])
 
-            if road_distance(a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b) < cost_index_volume_bag["cost"]:
-                cost_index_volume_bag["cost"] = road_distance(
-                    a, item_lat_long) + road_distance(item_lat_long, b) - road_distance(a, b)
+            if air_distance(a, item_lat_long) + air_distance(item_lat_long, b) - air_distance(a, b) < cost_index_volume_bag["cost"]:
+                cost_index_volume_bag["cost"] = air_distance(
+                    a, item_lat_long) + air_distance(item_lat_long, b) - air_distance(a, b)
                 cost_index_volume_bag["index"] = i
 
         min_cost_index_volume_bags.append(list(cost_index_volume_bag.values()))

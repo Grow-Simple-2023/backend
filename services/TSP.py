@@ -9,7 +9,10 @@ from typing import List, Tuple, Set
 from services.Clustering import distance
 
 
-def road_distance(origin, destination) -> float:
+def air_distance(origin, destination) -> float:
+    """
+    Air distance between two coordinates
+    """
     lat1, lon1 = origin
     lat2, lon2 = destination
     radius = 6371  # km
@@ -24,7 +27,9 @@ def road_distance(origin, destination) -> float:
 
 
 class TSP:
-
+    """
+    A class containing collection of TSP algorithms of various complexities
+    """
     N: int
     graph: List[List[float]]
     node_weight: List[float]
@@ -37,15 +42,21 @@ class TSP:
             raise ValueError("Graph Must Have Atleast One Node")
 
     def generate_graph(self, item_lat_long: List[Tuple[float]]) -> List[List[float]]:
+        """
+        A method to generate matrix like graph from list of coordinates
+        """
         n = len(item_lat_long)
         graph = [[0 for _ in range(n)] for _ in range(n)]
         for i in range(n-1):
             for j in range(i+1, n):
-                graph[i][j] = road_distance(item_lat_long[i], item_lat_long[j])
+                graph[i][j] = air_distance(item_lat_long[i], item_lat_long[j])
                 graph[j][i] = graph[i][j]
         return graph
 
     def get_path_cost(self, path: List[int]) -> float:
+        """
+        A method to calculate the cost of a path
+        """
         cost = 0
         for i in range(self.N-1):
             cost += self.graph[path[i]][path[i+1]]
@@ -53,7 +64,9 @@ class TSP:
         return cost
 
     def shortest_distance_first(self, start: int, verbose: bool = False) -> List[int]:
-
+        """
+        A method to implement the shortest distance first algorithm which is a greedy approach
+        """
         time_start = time()
 
         def argmin_except(neighbours: List[float], path: List[int]) -> Tuple[List[int], float]:
@@ -80,7 +93,10 @@ class TSP:
         return path, path_cost, delta
 
     def shortest_distance_first_combination(self, verbose: bool = False) -> List[int]:
-
+        """
+        A method to implement the shortest distance first algorithm 
+        for every node one by one. The best path is returned.
+        """
         time_start = time()
 
         def argmin_except(neighbours: List[float], path: List[int]) -> Tuple[List[int], float]:
@@ -106,7 +122,9 @@ class TSP:
         return min_path, min_path_cost, delta
 
     def two_edge_switch(self, iterations: int,  path: List[int], verbose: bool = False) -> List[int]:
-
+        """
+        A method to perform two edge shift optimization, which is a local search algorithm.
+        """
         time_start = time()
         min_path, min_path_cost = [], float('inf')
         cost = self.get_path_cost(path)
@@ -126,6 +144,9 @@ class TSP:
         return min_path, min_path_cost, delta
 
     def three_edge_switch(self, iterations: int, path: List[int], verbose: bool = False) -> List[int]:
+        """
+        A method to perform three edge shift optimization, which is a local search algorithm.
+        """
         time_start = time()
         min_path, min_path_cost = [], float('inf')
         cost = self.get_path_cost(path)
@@ -147,6 +168,10 @@ class TSP:
         return min_path, min_path_cost, delta
 
     def perfect(self, verbose: bool = False) -> List[float]:
+        """
+        An exponential time perfect algorithm for the best possible TSP route
+        using Dynamic Programming.
+        """
         time_start = time()
 
         matrix = self.graph
@@ -194,6 +219,10 @@ class TSP:
         return path, path_cost, delta
 
     def approximation_1_5(self, verbose: bool = False) -> List[float]:
+        """
+        AA method which implements christofide's algorithm which is a 
+        1.5 approximation algorithm for TSP.
+        """
         time_start = time()
 
         def minimum_spanning_tree():
