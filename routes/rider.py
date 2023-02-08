@@ -14,8 +14,10 @@ async def rider_home(user_data=Depends(decode_jwt)):
     return {"message": "Welcome to Grow-Simplee Rider API"}
 
 
+
 @router.get("/route/{phone_no}")
 async def get_route_by_number(phone_no: str, user_data=Depends(decode_jwt)):
+    """ endpoint used for getting route of a rider by phone number """
     check_role(user_data, ["ADMIN", "RIDER"])
     route = db.route.find_one({"rider_id": phone_no}, {"_id": 0})
     if not route:
@@ -26,6 +28,7 @@ async def get_route_by_number(phone_no: str, user_data=Depends(decode_jwt)):
 
 @router.post("/item-status-update")
 async def item_status_update(item_status: ItemStatusModel, user_data=Depends(decode_jwt)):
+    """ endpoint used for updating item status like cancel and delivered """
     check_role(user_data, ["ADMIN", "RIDER"])
     rider = db.route.find_one(
         {"items_in_order.id": item_status.item_id, "rider_id": user_data["phone_no"]}, {"_id": 0})
@@ -58,6 +61,7 @@ async def item_status_update(item_status: ItemStatusModel, user_data=Depends(dec
 
 @router.post("/modify-route")
 async def modify_route(modify_route: ModifyRoute, user_data=Depends(decode_jwt)):
+    """ endpoint used for modifying route of a rider when delivery is cancelled or item is added """
     check_role(user_data, ["ADMIN", "RIDER"])
     rider_id, item_ids_in_order = modify_route.rider_id, modify_route.item_ids_in_order
     if (user_data["role"] == "RIDER"):
@@ -84,6 +88,7 @@ async def modify_route(modify_route: ModifyRoute, user_data=Depends(decode_jwt))
 
 @router.get("/is-route-modified-after/{route_id}")
 async def is_route_modified_after(route_id: str, last_modified: str, user_data=Depends(decode_jwt)):
+    """ endpoint used for checking if route is modified after a particular time """
     check_role(user_data, ["ADMIN", "RIDER"])
     if (user_data["role"] == "RIDER" and route_id != user_data["phone_no"]):
         raise HTTPException(
@@ -98,6 +103,7 @@ async def is_route_modified_after(route_id: str, last_modified: str, user_data=D
 
 @router.post("/send-self-location")
 async def send_self_location(location: Location, user_data=Depends(decode_jwt)):
+    """ endpoint used for sending rider location """
     check_role(user_data, ["RIDER"])
     phone_no = check_role["phone_no"]
     route_info = db.route.find_one({"rider_id": phone_no})

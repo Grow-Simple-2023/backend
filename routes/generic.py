@@ -20,6 +20,7 @@ async def generic_home():
 
 @router.post("/register")
 async def register(register: Register):
+    """ endpoint used for registering a new user """
     if register.password != register.confirm_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
@@ -40,6 +41,7 @@ async def register(register: Register):
 
 @router.post("/login")
 async def login(login: Login):
+    """ endpoint used for logging in a user """
     if (not login.phone_no.isnumeric() or len(login.phone_no) != 10):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Provide correct phone number")
@@ -50,11 +52,13 @@ async def login(login: Login):
 
 @router.get("/decode-token")
 async def decode_token(load: str = Depends(decode_jwt)):
+    """ endpoint used for decoding a token """
     return load
 
 
 @router.post("/add-item-details")
 async def add_item_details(item_dim_data: List[ItemDimData]):
+    """ endpoint used for adding item details """
     item_ids = [item.item_id for item in item_dim_data]
     item_dims = [[item.length, item.breadth, item.height, item.weight]
                  for item in item_dim_data]

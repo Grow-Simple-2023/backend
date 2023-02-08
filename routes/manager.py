@@ -26,6 +26,7 @@ async def manager_home(user_data=Depends(decode_jwt)):
 
 @router.get("/users")
 async def get_users(load: str = Depends(decode_jwt)):
+    """ endpoint used for getting all users """
     check_role(load, ["ADMIN"])
     users = []
     for user in db.user.find():
@@ -37,6 +38,7 @@ async def get_users(load: str = Depends(decode_jwt)):
 # to calculate on time delivery percentage
 @router.get("/OTD-percentage")
 async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting on time delivery percentage """
     check_role(user_data, ["ADMIN"])
     no_of_successful_deleveries = db.item.count_documents({"EDD": {"$lte": str(datetime.now())},
                                                            "control.is_fulfilled": True,
@@ -50,11 +52,11 @@ async def on_time_delivery_percentage(user_data=Depends(decode_jwt)):
         no_of_successful_deleveries/total_deliveries_to_be_done)*100
     return {"percentage": percentage_of_successful_deliveries}
 
-# items in delivery
 
 
 @router.get("/items-in-delivery")
 async def current_items_in_delivery(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting all items in delivery"""
     check_role(user_data, ["ADMIN"])
     items_in_delivery = list(db.route.find(
         {}, {"_id": 0}))
@@ -63,6 +65,7 @@ async def current_items_in_delivery(user_data=Depends(decode_jwt)):
 
 @router.get("/items/{item_id}")
 async def get_item(item_id: str, user_data=Depends(decode_jwt)):
+    """ endpoint used for getting a particular item"""
     check_role(user_data, ["ADMIN"])
     item = db.item.find_one({"id": item_id}, {"_id": 0})
     if not item:
@@ -73,6 +76,7 @@ async def get_item(item_id: str, user_data=Depends(decode_jwt)):
 
 @router.get("/unassigned-items")
 async def unassigned_items(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting all unassigned items"""
     check_role(user_data, ["ADMIN"])
     documents = list(db.item.find({"control.is_fulfilled": False,
                                    "control.is_assigned": False,
@@ -82,6 +86,7 @@ async def unassigned_items(user_data=Depends(decode_jwt)):
 
 @router.get("/riders")
 async def get_rider(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting all riders"""
     check_role(user_data, ["ADMIN"])
     documents = list(db.user.find({"role": "RIDER"}, {"_id": 0}))
     return {"riders": documents}
@@ -89,6 +94,7 @@ async def get_rider(user_data=Depends(decode_jwt)):
 
 @router.get("/unassigned-riders")
 async def get_unassigned_rider(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting all unassigned riders"""
     check_role(user_data, ["ADMIN"])
     a_riders = []
     assigned_riders = list(db.route.find({}, {"_id": 0}))
@@ -101,6 +107,7 @@ async def get_unassigned_rider(user_data=Depends(decode_jwt)):
 
 @router.get("/riders/{rider_no}")
 async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
+    """ endpoint used for getting a particular rider"""
     check_role(user_data, ["ADMIN"])
     rider = db.user.find_one(
         {"phone_no": rider_no, "role": "RIDER"}, {"_id": 0})
@@ -112,18 +119,21 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
 
 @router.get("/delivered")
 async def get_delivered_items(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting all delivered items"""
     check_role(user_data, ["ADMIN"])
     return {"delivered_items": list(db.item.find({"control.is_delivery": True, "control.is_fulfilled": True, "control.is_cancelled": False}, {"_id": 0}))}
 
 
 @router.get("/in-pickup")
 async def get_items_in_pickup(user_data=Depends(decode_jwt)):
+    """ endpoint used for getting all items in pickup"""
     check_role(user_data, ["ADMIN"])
     return {"items_in_pickup": list(db.item.find({"control.is_pickup": True, "control.is_fulfilled": False}, {"_id": 0}))}
 
 
 @router.post("/distribute")
 async def distribute_items(distribution_info: DistributeModel, user_data=Depends(decode_jwt)):
+    """ endpoint used for distributing items to riders"""
     rider_volume = 15**3 * 40
     check_role(user_data, ["ADMIN"])
     start = time()
@@ -236,6 +246,7 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
 
 @router.delete("/delete-pickup/{item_id}")
 async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
+    """Delete a pickup item from the database"""
     check_role(user_data, ["ADMIN"])
 
     item_doc = db.item.find_one_and_update(
@@ -272,6 +283,7 @@ async def delete_pickup(item_id: str, user_data=Depends(decode_jwt)):
 
 @router.put("/add-pickup/{item_id}")
 async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
+    """Add a pickup item to the database"""
     check_role(user_data, ["ADMIN"])
     item_info = db.item.find_one({"id": item_id,
                                   "control.is_fulfilled": True,
@@ -352,6 +364,7 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
 
 @router.post("/load_items/")
 async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(decode_jwt)):
+    """Load items from excel file"""
     check_role(user_data, ["ADMIN"])
     file_content = await file.read()
 
