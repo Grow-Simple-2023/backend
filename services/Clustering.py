@@ -16,6 +16,15 @@ def distance(origin, destination)->float:
     d = radius * c
     return d
 
+def get_centroid(points,hub,no_riders)->list[int]:
+    dis = []
+    for point in points:
+        dis.append((distance(hub,point),point))
+    dis.sort()
+    centroid = []
+    for i in range(no_riders):
+        centroid.append(dis[i][1])
+    return centroid
 # to create cluster for deliveries
 class Clustering:
     
@@ -24,20 +33,23 @@ class Clustering:
     no_riders: int
     rider_vol: List[float]
     EDD: List[str]
+    hub: Tuple[float]
     
-    def __init__(self, item_dims: List[Tuple[float]], item_lat_long: List[Tuple[float]], no_riders: int, rider_vol: List[float],EDD:List[str]) -> None:
+    def __init__(self, item_dims: List[Tuple[float]], item_lat_long: List[Tuple[float]], no_riders: int, rider_vol: List[float],EDD:List[str],hub:Tuple[float]) -> None:
         assert len(item_dims)>0
         assert len(item_dims)==len(item_lat_long)
         assert len(item_dims[0])==3
         assert len(item_lat_long[0])==2
         assert no_riders<len(item_dims)
         assert len(EDD) == len(item_dims)
+        assert len(hub) == 2
         
         self.item_dims = item_dims
         self.item_lat_long = item_lat_long
         self.no_riders = no_riders
         self.rider_vol = rider_vol
         self.EDD = EDD
+        self.hub = hub
     
     def distribute(self) -> List[List[int]]:
 
@@ -62,6 +74,12 @@ class Clustering:
                     points = []
                     centroids.append(Centroid(centroid,points))
                     break
+
+        # picks centroid based on distance from hub
+        # cen = get_centroid(self.item_lat_long,self.hub,self.no_riders)
+        # for i in cen:
+        #     points = []
+        #     centroids.append(Centroid(i,points))
         
         # for i in centroids:
         #     print(i.centroid)
