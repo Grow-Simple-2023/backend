@@ -44,3 +44,10 @@ class Location(BaseModel):
     latitude: float
     longitude: float
     timestamp: int
+
+class ItemDimData(BaseModel):
+    item_id: str
+    length: float
+    breadth: float
+    height: float
+    weight: float

@@ -1,9 +1,9 @@
-from typing import List,Tuple
+from typing import List, Tuple
 import statistics as st
 import numpy as np
 
 
-def anomaly_detect(data: List[List[float]])-> List[int]:
+def anomaly_detect(data: List[List[float]]) -> List[int]:
     z = 1.7
     data = np.array(data)
     data1 = [i[0] for i in data]
@@ -19,6 +19,8 @@ def anomaly_detect(data: List[List[float]])-> List[int]:
     std3 = st.stdev(data3)
     std4 = st.stdev(data4)
     anamoly_list = []
+    print(mean1, mean2, mean3, mean4)
+    print(std1, std2, std3, std4)
     for index, i in enumerate(data):
         if i[0] > mean1 + z * std1 or i[0] < mean1 - z * std1:
             anamoly_list.append(index)

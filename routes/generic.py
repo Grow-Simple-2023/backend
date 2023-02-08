@@ -1,6 +1,7 @@
 
 from models.model import *
 from services.auth import *
+from services.anomaly_detect import *
 from dotenv import load_dotenv
 from config.db_config import db
 from fastapi import APIRouter, Request, HTTPException, status, Depends
@@ -50,3 +51,23 @@ async def login(login: Login):
 @router.get("/decode-token")
 async def decode_token(load: str = Depends(decode_jwt)):
     return load
+
+
+@router.post("/add-item-details")
+async def add_item_details(item_dim_data: List[ItemDimData]):
+    item_ids = [item.item_id for item in item_dim_data]
+    item_dims = [[item.length, item.breadth, item.height, item.weight]
+                 for item in item_dim_data]
+    rejected_indices = anomaly_detect(item_dims)
+    rejected_ids = [item_ids[x] for x in rejected_indices]
+    for index, id in enumerate(item_ids):
+        if id in rejected_ids:
+            continue
+        db.item.update_one(
+            {"id": id}, {"$set": {"description.length": item_dim_data[index].length,
+                                  "description.breadth": item_dim_data[index].breadth,
+                                  "description.height": item_dim_data[index].height,
+                                  "description.weight": item_dim_data[index].weight}})
+    
+    db.item.update_many({"id": {"$in": rejected_ids}}, {"$set": {"control.is_cancelled": True}})
+    return {"rejected_ids": rejected_ids}
