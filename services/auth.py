@@ -10,6 +10,7 @@ from fastapi import HTTPException, status, Request
 
 
 def check_user_exists(phone_no):
+    """ checking user exits based on phone number """
     user = None
     try:
         user = db.user.find_one({"phone_no":phone_no})
@@ -21,7 +22,7 @@ def check_user_exists(phone_no):
     return 
 
 def add_new_user(phone_no, first_name, last_name, password, role ):
-    # print("hello world from add new user function ")
+    """ adding new user into database"""
     try:
         result = db.user.insert_one({
             "name":{
@@ -44,6 +45,7 @@ def add_new_user(phone_no, first_name, last_name, password, role ):
   
 
 def verify_credentials(phone_no, password):
+  """ verifying user credentials """
   try:
       user = db.user.find_one({"phone_no": phone_no, "password": password})
       del user['_id']
@@ -59,6 +61,7 @@ def verify_credentials(phone_no, password):
 
 
 def create_token(phone_no, role):
+    """ creating jwt token """
     exp = 3600 * float(os.getenv("TOKEN_EXP")) * 24
     encoded = jwt.encode({"phone_no": phone_no, "role": role, "exp": int(time())+exp}, os.getenv("PRIVATE_KEY"), algorithm="HS256")
     token = Token(**{"access_token": encoded, "token_type": "Bearer"})
@@ -66,6 +69,7 @@ def create_token(phone_no, role):
 
 
 def decode_jwt(request: Request):
+    """ decoding jwt token """
     token = request.headers.get('Credentials')
     try:
         assert token
@@ -80,6 +84,7 @@ def decode_jwt(request: Request):
     return {"phone_no": phone_no, "role": role}
 
 def check_role(load, roles):
+    """ checking user role """
     try:
         assert load["role"] in roles
     except Exception as e:
