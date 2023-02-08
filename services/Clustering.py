@@ -62,10 +62,6 @@ class Clustering:
                     points = []
                     centroids.append(Centroid(centroid,points))
                     break
-        
-        # for i in centroids:
-        #     print(i.centroid)
-        #     print(i.points)
 
         # number of times to run 
         epochs = 20
@@ -108,10 +104,6 @@ class Clustering:
                     lat = lat/size
                     long = long/size
                     centroids[centroid].centroid = (lat,long)
-        
-        # for k in centroids:
-        #     print(k.centroid)
-        #     print(k.points)
         
         # calculating volume of deliveries
         riders_deleveries = []
