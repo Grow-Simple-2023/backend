@@ -350,8 +350,8 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
             "is_assigned": False}
 
 
-@router.post("/load_items")
-async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
+@router.post("/load_items/")
+async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
     file_content = await file.read()
 
@@ -378,7 +378,7 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
         json.dump({"adds": df["address"].tolist()}, f)
 
     out = subprocess.run(
-        ["python3", "./services/geocode_file.py", random_file])
+        ["python", "./services/geocode_file.py", random_file])
 
     with open("./services/temp_files/"+random_file, "r") as f:
         lat_longs = json.load(f)
@@ -411,28 +411,31 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     for i in range(N):
         now = str(datetime.now())
         otp_hash = sum_of_chars(now+str(lat_longs[i][0])+str(lat_longs[i][1]))
+        is_cancelled = not is_in_bang(
+            (float(lat_longs[i][0]), float(lat_longs[i][1])))
         document = {
-            "id": df["product_id"][i]+str(random.randint(0, 999999999)),
+            "id": str(phone_nos[i]),
+            "product_id": df["product_id"][i],
             "title": f"Watch {i}",
             "description": {
-                "length": None,
-                "breadth": None,
-                "height": None,
-                "weight": None
+                "length": float(random.uniform(10, 20)),
+                "breadth": float(random.uniform(10, 20)),
+                "height": float(random.uniform(10, 20)),
+                "weight": float(random.uniform(10, 20))
             },
             "address": df["address"][i],
             "location": {
-                "latitude": lat_longs[i][0],
-                "longitude": lat_longs[i][1]
+                "latitude": float(lat_longs[i][0]),
+                "longitude": float(lat_longs[i][1])
             },
             # TODO: Add EDD from file
             "EDD": now,
             "control": {
                 "is_assigned": False,
-                "is_fulfilled": False,
+                "is_fulfilled": is_delivered,
                 "is_pickup": False,
                 "is_delivery": True,
-                "is_cancelled": False
+                "is_cancelled": is_cancelled
             },
             "OTP": int(str((otp_hash % 9) + 1) + str(otp_hash % 10000)),
             "delivered_on": None,
@@ -442,4 +445,4 @@ async def load_excel(file: UploadFile, user_data=Depends(decode_jwt)):
     db.item.insert_many(documents)
     for i in range(N):
         del documents[i]["_id"]
-    return {"data": documents}
+    return {"data": "Data loaded successfully"}
