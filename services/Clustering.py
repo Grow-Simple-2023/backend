@@ -30,7 +30,7 @@ class Clustering:
         assert len(item_dims)==len(item_lat_long)
         assert len(item_dims[0])==3
         assert len(item_lat_long[0])==2
-        assert no_riders<len(item_dims)
+        assert no_riders<=len(item_dims)
         assert len(EDD) == len(item_dims)
         
         self.item_dims = item_dims

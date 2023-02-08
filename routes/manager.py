@@ -95,7 +95,7 @@ async def get_unassigned_rider(user_data=Depends(decode_jwt)):
     for rider in assigned_riders:
         a_riders.append(rider["rider_id"])
     documents = list(db.user.find(
-        {"phone_no": {"$nin": assigned_riders}, "role": "RIDER"}, {"_id": 0}))
+        {"phone_no": {"$nin": a_riders}, "role": "RIDER"}, {"_id": 0}))
     return {"unassigned_riders": documents}
 
 
@@ -113,7 +113,7 @@ async def get_rider(rider_no: str, user_data=Depends(decode_jwt)):
 @router.get("/delivered")
 async def get_delivered_items(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
-    return {"delivered_items": list(db.item.find({"control.is_delivery": True, "control.is_fulfilled": True}, {"_id": 0}))}
+    return {"delivered_items": list(db.item.find({"control.is_delivery": True, "control.is_fulfilled": True, "control.is_cancelled": False}, {"_id": 0}))}
 
 
 @router.get("/in-pickup")
@@ -160,7 +160,7 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
     ]))
 
     item_dims, item_lat_long, EDD = [], [], []
-
+    print(item_info)
     if len(item_info) != len(distribution_info.item_ids):
         missing_item_ids = set(distribution_info.item_ids) - \
             set(item["id"] for item in item_info)
@@ -173,7 +173,12 @@ async def distribute_items(distribution_info: DistributeModel, user_data=Depends
         EDD = [item["EDD"] for item in item_info]
 
     rider_vol = [rider_volume for _ in range(no_riders)]
-    cluster = Clustering(item_dims, item_lat_long, no_riders, rider_vol, EDD)
+    try:
+        cluster = Clustering(item_dims, item_lat_long,
+                             no_riders, rider_vol, EDD)
+    except:
+        raise HTTPException(
+            status_code=400, detail=f"No of Items should be greater than Riders")
     distribution = cluster.distribute()
 
     distribution = [[elem + 1 for elem in row] for row in distribution]
