@@ -28,10 +28,10 @@ async def get_route_by_number(phone_no: str, user_data=Depends(decode_jwt)):
 async def item_status_update(item_status: ItemStatusModel, user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN", "RIDER"])
     rider = db.route.find_one(
-        {"items_in_order.id": item_status.item_id, "rider_id": user_data.phone_no}, {"_id": 0})
+        {"items_in_order.id": item_status.item_id, "rider_id": user_data["phone_no"]}, {"_id": 0})
     if not rider:
         raise HTTPException(
-            status_code=404, detail="Item not assigned to " + str(user_data.phone_no) + " rider")
+            status_code=404, detail="Item not assigned to " + str(user_data["phone_no"]) + " rider")
 
     item = db.item.find_one({"id": item_status.item_id}, {"_id": 0, "OTP": 1})
     if not item:
@@ -48,7 +48,7 @@ async def item_status_update(item_status: ItemStatusModel, user_data=Depends(dec
     db.item.update_one({"id": item_status.item_id}, {
                        "$set": {"control": control, "delivered_on": str(datetime.now())}})
 
-    db.route.update_one({"rider_id": user_data.phone_no},
+    db.route.update_one({"rider_id": user_data["phone_no"]},
                         {"$pull": {"items_in_order": {"id": item_status.item_id}},
                          "$set": {"last_modified": str(datetime.now())}})
 
