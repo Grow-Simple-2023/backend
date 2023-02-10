@@ -18,6 +18,14 @@ from fastapi import APIRouter, HTTPException, Request, Depends, File, UploadFile
 router = APIRouter()
 
 
+def is_in_bang(point, coordinates=[12.853789, 77.425682, 13.101558, 77.744427]):
+    x, y = point
+    x_min, y_min, x_max, y_max = coordinates
+    if x_min <= x <= x_max and y_min <= y <= y_max:
+        return True
+    else:
+        return False
+
 @router.get("/")
 async def manager_home(user_data=Depends(decode_jwt)):
     check_role(user_data, ["ADMIN"])
@@ -363,7 +371,6 @@ async def add_pickup(item_id: str, user_data=Depends(decode_jwt)):
 
 @router.post("/load_items/")
 async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(decode_jwt)):
-    """Load items from excel file"""
     check_role(user_data, ["ADMIN"])
     file_content = await file.read()
 
