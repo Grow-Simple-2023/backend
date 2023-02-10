@@ -1,15 +1,5 @@
 [
     {
-        "id": "Hub",
-        "title": "Hub",
-        "address": "address 0",
-        "location": {
-            "latitude": 15,
-            "longitude": 75
-        },
-        "phone_number": "7021783030"
-    },
-    {
         "id": "object0",
         "title": "title0",
         "description": {

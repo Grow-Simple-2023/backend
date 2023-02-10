@@ -1,0 +1,12 @@
+[
+    {
+        "id": "Hub",
+        "title": "Hub",
+        "address": "Hub 0",
+        "location": {
+            "latitude": 12.975,
+            "longitude": 77.62209751903497
+        },
+        "phone_number": "9483303320"
+    }
+]
