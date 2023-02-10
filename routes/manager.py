@@ -465,3 +465,39 @@ async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(dec
     for i in range(N):
         del documents[i]["_id"]
     return {"data": "Data loaded successfully"}
+
+
+@router.get("/submission-files")
+async def get_submission_files():
+    documents = list(db.route.find({}))
+
+    # geojson file
+    riders_route = {}
+    for document in documents:
+        route = []
+        for item in document["items_in_order"]:
+            route.append([item["location"]["latitude"],
+                         item["location"]["longitude"]])
+        riders_route[document["rider_id"]] = route
+    riders_route_distance = {}
+    for rider_id in riders_route:
+        res = get_geojson(riders_route[rider_id],
+                          "./geojson/"+rider_id+".json")
+        riders_route_distance[rider_id] = res
+
+    # csv file
+    riders_route = {}
+    for document in documents:
+        coordinates = []
+        items_id = []
+        for item in document["items_in_order"]:
+            coordinates.append(
+                [item["location"]["latitude"], item["location"]["longitude"]])
+            items_id.append(item["id"])
+        riders_route[document["rider_id"]] = {
+            "coordinates": coordinates, "items_id": items_id}
+
+    for rider_id in riders_route:
+        write_to_csv(riders_route[rider_id]["coordinates"],  "./geocsv/" +
+                     rider_id+".csv", riders_route[rider_id]["items_id"])
+    return {"data": riders_route_distance}
