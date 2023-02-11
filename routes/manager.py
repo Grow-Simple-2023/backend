@@ -359,31 +359,17 @@ async def add_pickup(item_id: str):
 
 
 @router.post("/load_items/")
-async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(decode_jwt)):
-    check_role(user_data, ["ADMIN"])
+async def load_excel(is_delivered: bool, file: UploadFile,):
+    # check_role(user_data, ["ADMIN"])
     file_content = await file.read()
 
-    if not os.path.exists("./services/temp_files"):
-        os.makedirs("./services/temp_files")
-    x_file_name = "./services/temp_files/"+f"{random.randint(1, 9999999)}.xlsx"
-
-    with open(x_file_name, "wb") as f:
-        f.write(file_content)
-
-    df = pd.read_excel(x_file_name)
-    print(df)
-    try:
-        df = df.drop(columns=["Unnamed: 0"])
-    except:
-        pass
-
-    os.remove(x_file_name)
+    df = pd.read_csv(io.BytesIO(file_content))
 
     N = len(df)
 
     random_file = f"{random.randint(10000, 99999)}.json"
     with open("./services/temp_files/"+random_file, "w+") as f:
-        json.dump({"adds": df["address"].tolist()}, f)
+        json.dump({"adds": df["addresses"].tolist()}, f)
 
     out = subprocess.run(
         ["python", "./services/geocode_file.py", random_file])
@@ -411,18 +397,13 @@ async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(dec
 
     documents, docs = [], []
 
-    try:
-        phone_nos = df["phone_no"].tolist()
-    except:
-        phone_nos = df["AWB"].tolist()
-
     for i in range(N):
         now = str(datetime.now())
         otp_hash = sum_of_chars(now+str(lat_longs[i][0])+str(lat_longs[i][1]))
         is_cancelled = not is_in_bang(
             (float(lat_longs[i][0]), float(lat_longs[i][1])))
         document = {
-            "id": str(phone_nos[i]),
+            "id": str(pdf['awb'][i]),
             "product_id": df["product_id"][i],
             "title": f"Watch {i}",
             "description": {
@@ -431,13 +412,13 @@ async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(dec
                 "height": float(random.uniform(10, 20)),
                 "weight": float(random.uniform(10, 20))
             },
-            "address": df["address"][i],
+            "address": df["addresses"][i],
             "location": {
                 "latitude": float(lat_longs[i][0]),
                 "longitude": float(lat_longs[i][1])
             },
             # TODO: Add EDD from file
-            "EDD": now,
+            "EDD": str(df["EDD"][i]),
             "control": {
                 "is_assigned": False,
                 "is_fulfilled": is_delivered,
@@ -447,9 +428,9 @@ async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(dec
             },
             "OTP": int(str((otp_hash % 9) + 1) + str(otp_hash % 10000)),
             "delivered_on": None,
-            "phone_no": str(phone_nos[i])
+            "phone_no": str(df['phone_no'][i])
         }
-        documents.append(document)
+    documents.append(document)
     db.item.insert_many(documents)
     for i in range(N):
         del documents[i]["_id"]
