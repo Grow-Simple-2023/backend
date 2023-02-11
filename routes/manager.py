@@ -430,7 +430,7 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
             "delivered_on": None,
             "phone_no": str(df['awb'][i])
         }
-    documents.append(document)
+        documents.append(document)
     db.item.insert_many(documents)
     return {"data": "Data loaded successfully"}
 
