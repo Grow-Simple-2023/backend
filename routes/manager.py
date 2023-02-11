@@ -403,7 +403,7 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
         is_cancelled = not is_in_bang(
             (float(lat_longs[i][0]), float(lat_longs[i][1])))
         document = {
-            "id": str(pdf['awb'][i]),
+            "id": str(df['awb'][i]),
             "product_id": df["product_id"][i],
             "title": f"Watch {i}",
             "description": {
@@ -428,12 +428,10 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
             },
             "OTP": int(str((otp_hash % 9) + 1) + str(otp_hash % 10000)),
             "delivered_on": None,
-            "phone_no": str(df['phone_no'][i])
+            "phone_no": str(df['awb'][i])
         }
     documents.append(document)
     db.item.insert_many(documents)
-    for i in range(N):
-        del documents[i]["_id"]
     return {"data": "Data loaded successfully"}
 
 
