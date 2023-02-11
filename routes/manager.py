@@ -1,6 +1,7 @@
 import json
 import random
 import tempfile
+import io
 import subprocess
 import pandas as pd
 import multiprocessing
@@ -370,7 +371,7 @@ async def load_excel(is_delivered: bool, file: UploadFile, user_data=Depends(dec
         f.write(file_content)
 
     df = pd.read_excel(x_file_name)
-
+    print(df)
     try:
         df = df.drop(columns=["Unnamed: 0"])
     except:
