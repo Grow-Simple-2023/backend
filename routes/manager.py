@@ -2,6 +2,10 @@ import json
 import random
 import tempfile
 import io
+import requests
+import json
+from tqdm import tqdm
+import urllib.parse
 import subprocess
 import pandas as pd
 import multiprocessing
@@ -367,19 +371,19 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
 
     N = len(df)
 
-    random_file = f"{random.randint(10000, 99999)}.json"
-    with open("./services/temp_files/"+random_file, "w+") as f:
-        json.dump({"adds": df["addresses"].tolist()}, f)
+    # random_file = f"{random.randint(10000, 99999)}.json"
+    # with open("./services/temp_files/"+random_file, "w+") as f:
+    #     json.dump({"adds": df["addresses"].tolist()}, f)
 
-    out = subprocess.run(
-        ["python", "./services/geocode_file.py", random_file])
+    # out = subprocess.run(
+    #     ["python", "./services/geocode_file.py", random_file])
 
-    with open("./services/temp_files/"+random_file, "r") as f:
-        lat_longs = json.load(f)
+    # with open("./services/temp_files/"+random_file, "r") as f:
+    #     lat_longs = json.load(f)
 
-    lat_longs = lat_longs["ll"]
+    # lat_longs = lat_longs["ll"]
 
-    os.remove("./services/temp_files/"+random_file)
+    # os.remove("./services/temp_files/"+random_file)
 
     # lat_longs = [(random.uniform(12, 13), random.uniform(77, 78))
     #              for i in range(N)]
@@ -387,21 +391,31 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
     def sum_of_chars(s: str) -> int:
         return sum(ord(c) for c in s)
 
-    try:
-        for lat_long in lat_longs:
-            assert lat_long[0] != None and lat_long[1] != None
-        assert len(lat_longs) == N
-    except:
-        raise HTTPException(
-            status_code=400, detail="Addresses could not be resolved to a location")
+    # try:
+    #     for lat_long in lat_longs:
+    #         assert lat_long[0] != None and lat_long[1] != None
+    #     assert len(lat_longs) == N
+    # except:
+    #     raise HTTPException(
+    #         status_code=400, detail="Addresses could not be resolved to a location")
 
     documents, docs = [], []
-
-    for i in range(N):
+    API_KEY = ["3c4eacd7b94417c93f4bc00150e310e1", "d303a35b42b86c32f5e2631898684aa3",
+               "3324a57d1d08421bedd7958ce4c13d97", "0b6ef7a460acb75d81ef6c85f8b474f4", "c31e0456f0f0d56b200621e548344e9a"]
+    for i in tqdm(range(N)):
         now = str(datetime.now())
-        otp_hash = sum_of_chars(now+str(lat_longs[i][0])+str(lat_longs[i][1]))
+        url = f"https://geokeo.com/geocode/v1/search.php?q={urllib.parse.quote(df.addresses[i])}&api={API_KEY[i%len(API_KEY)]}"
+        try:    
+            response = requests.get(url)
+            response = response.text
+            response_json = json.loads(response)
+            lat = response_json['results'][0]['geometry']['location']['lat']
+            long = response_json['results'][0]['geometry']['location']['lng']
+        except:
+            continue
+        otp_hash = sum_of_chars(now+str(lat)+str(long))
         is_cancelled = not is_in_bang(
-            (float(lat_longs[i][0]), float(lat_longs[i][1])))
+            (float(lat), float(long)))
         document = {
             "id": str(df['awb'][i]),
             "product_id": df["product_id"][i],
@@ -414,8 +428,8 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
             },
             "address": df["addresses"][i],
             "location": {
-                "latitude": float(lat_longs[i][0]),
-                "longitude": float(lat_longs[i][1])
+                "latitude": float(lat),
+                "longitude": float(long)
             },
             # TODO: Add EDD from file
             "EDD": str(df["EDD"][i]),
@@ -430,8 +444,8 @@ async def load_excel(is_delivered: bool, file: UploadFile,):
             "delivered_on": None,
             "phone_no": str(df['awb'][i])
         }
-        documents.append(document)
-    db.item.insert_many(documents)
+        try: db.item.insert_one(document)
+        except: pass
     return {"data": "Data loaded successfully"}
 
 
