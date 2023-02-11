@@ -5,20 +5,13 @@ import asyncio
 import requests
 import requests
 import urllib.parse
+from time import sleep
 from typing import List
+from tqdm import tqdm
 
 
-API_KEY = "3c4eacd7b94417c93f4bc00150e310e1"
-
-
-def distance_matrix(coordinates):
-    coordinates_string = ""
-    for coordinate in coordinates:
-        coordinates_string += f"{coordinate[0]},{coordinate[1]};"
-    url = f"https://api.mapbox.com/directions-matrix/v1/mapbox/driving-traffic/{coordinates_string}"
-    response = requests.get(url)
-    response_json = response.json()
-    return response_json
+API_KEY = ["3c4eacd7b94417c93f4bc00150e310e1", "d303a35b42b86c32f5e2631898684aa3",
+           "3324a57d1d08421bedd7958ce4c13d97", "0b6ef7a460acb75d81ef6c85f8b474f4", "c31e0456f0f0d56b200621e548344e9a"]
 
 
 async def send_request(url):
@@ -27,12 +20,15 @@ async def send_request(url):
             return await response.text()
 
 
-async def geocode_helper(addresses: List[str]) -> List[List[float]]:
+def geocode_helper(addresses: List[str]) -> List[List[float]]:
     urls = [
-        f"https://geokeo.com/geocode/v1/search.php?q={urllib.parse.quote(address)}&api={API_KEY}" for address in addresses]
-    tasks = [asyncio.ensure_future(send_request(url)) for url in urls]
-    responses = await asyncio.gather(*tasks)
-
+        f"https://geokeo.com/geocode/v1/search.php?q={urllib.parse.quote(address)}&api={API_KEY[index%len(API_KEY)]}" for index, address in enumerate(addresses)]
+    # tasks = [asyncio.ensure_future(send_request(url)) for url in urls]
+    # responses = await asyncio.gather(*tasks)
+    responses = []
+    for url in tqdm(urls):
+        response = requests.get(url)
+        responses.append(response.text)
     lat_longs = []
     for url, response in zip(urls, responses):
         try:
@@ -49,9 +45,19 @@ async def geocode_helper(addresses: List[str]) -> List[List[float]]:
 with open("./services/temp_files/"+sys.argv[1], "r") as f:
     addresses = json.load(f)
 
-addresses = addresses["adds"]
-loop = asyncio.get_event_loop()
-lat_longs = loop.run_until_complete(geocode_helper(addresses))
+print("started")
+final_lat_longs = []
+index, step = 0, 10
+while index < len(addresses["adds"]):
+    print(index)
+    addresses_temp = addresses["adds"][index:min(
+        index+step, len(addresses["adds"]))]
+    # loop = asyncio.get_event_loop()
+    # lat_longs = loop.run_until_complete(geocode_helper(addresses_temp))
+    lat_longs = geocode_helper(addresses_temp)
+    index += step
+    final_lat_longs += lat_longs
+    sleep(2)
 
 with open("./services/temp_files/"+sys.argv[1], "w+") as f:
-    json.dump({"ll": lat_longs}, f)
+    json.dump({"ll": final_lat_longs}, f)
